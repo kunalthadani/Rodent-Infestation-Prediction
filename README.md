@@ -30,6 +30,7 @@ propose a system for a science problem, for example.)
 - Our value proposition: predictive pest control Services (can offer preemptive treatment plans before infestations start), better resource allocation (deploys technicians where they’re needed most), increased revenue (subscription-based prevention services could be introduced)
 
 ---
+
 ### Contributors
 
 <!-- Table of contributors and their roles. 
@@ -44,8 +45,6 @@ link to their contributions in all repos here. -->
 | Akshay Hemant Paralikar         |Model training and training platforms |[Akshay's commits](https://github.com/adkrish1/Rodent-Infestation-Prediction/commits/main/?author=akshay412)|
 | Kunal Thadani                   |Continious X                          |[Kunal's commits](https://github.com/adkrish1/Rodent-Infestation-Prediction/commits/main/?author=kunalthadani)|
 | Rakshith Murthy                 |Data Pipeline                         |[Rakshith's commits](https://github.com/adkrish1/Rodent-Infestation-Prediction/commits/main/?author=valar007)|
-
-
 
 ### System diagram
 
@@ -70,6 +69,7 @@ conditions under which it may be used. -->
 | Garbage Collection Frequencies              | Department of Sanitation                                   | Public domain                                             | [Link](https://data.cityofnewyork.us/City-Government/DSNY-Frequencies/rv63-53db/about_data)
 | Monthly Monthly Tonnage Data                | Department of Sanitation                                   | Public domain                                             | [Link](https://data.cityofnewyork.us/City-Government/DSNY-Monthly-Tonnage-Data/ebb7-mvp5/about_data)
 |A3T-GCN: Attention Temporal Graph Convolutional Network for Traffic Forecasting| Jiawei Zhu | Open Access CC BY 4.0 | [Paper](https://arxiv.org/pdf/2006.11583) [GitHub](https://github.com/lehaifeng/T-GCN)
+
 
 
 ### Summary of infrastructure requirements
@@ -105,12 +105,14 @@ and which optional "difficulty" points you are attempting. -->
 
 <!-- Make sure to clarify how you will satisfy the Unit 8 requirements,  and which 
 optional "difficulty" points you are attempting. -->
+
 - Persistant storage: 30GB of storage on Chameleon Object Store to store the models (storing 30 previous models), datasets (10-15GB), docker containers (5GB), etc
 - Offline data that is used for training is stored in the persistant storage. The data will be split into training, testing and validation. Some of the validation data will be saved for production data, that will be used to test the model after deployment in production
 - The datasets are updated daily, we are running a Python script to download the newer data and transform it
 - Since the NYC datasets do not contain the neighbourhood data, we will be transforming the data to include that using geo-spacial data and lat-long co-ordinates for inferencing
 - For simulating the real world data, we require how far along does the end user require the prediction (1 week, 1 month, 2 weeks, etc.), lat-long co-ordinates or a geographical block (will depend on granularity chosen)
 - [Difficulty point] During the ETL pipeline, metadata (number of new instances, any missing data, errors, etc) of the data retrieved for training will be sent to Prometheus. The high level view of this will be queryable in Grafana for the team members
+
 
 #### Continuous X
 
