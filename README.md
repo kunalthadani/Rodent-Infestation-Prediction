@@ -155,4 +155,43 @@ optional "difficulty" points you are attempting. -->
 
 
 ### Continuous X
+To ensure the model remains accurate and effective over time, we implement a CI/CD/CT pipeline that automates training, evaluation, deployment, and monitoring. The pipeline integrates modern DevOps tools such as Argo Workflows, Helm, GitHub Actions, MLflow, and Kubernetes to ensure seamless operation in a cloud-native environment.
 
+**Continuous Integration (CI)**
+#### *Version Control and Automation*
+* **GitHub** is used for version control, where all model code, infrastructure configurations (Infrastructure-as-Code), and deployment scripts are maintained.  
+* **GitHub Actions** automates code quality checks and unit tests for data and model pre-processing.
+
+**Continuous Training (CT)**
+#### *Automated Model Retraining Workflow*
+* The model needs to adapt to changing environmental and sanitation conditions.  
+* A weekly scheduled job in **Argo Workflows** retrains the model with the latest data.  
+* The workflow job is:  
+1. Loads the latest dataset from **Chameleon persistent storage**.  
+2. Preprocesses and engineers features.  
+3. Trains the model.  
+4. Logs the new model and its metrics in **MLflow**.  
+5. Runs an offline evaluation against the previous model.  
+6. If performance surpasses a predefined threshold, the model is registered for deployment.  
+* If a significant drift in model performance is detected:  
+1. A retraining job is triggered automatically.  
+2. The new model is evaluated against the previous version.  
+3. If the new model outperforms the old one, it is deployed following the CX pipeline.
+
+**Continuous Deployment (CD)**
+#### *Containerization and Deployment*
+* The trained model is packaged as a **FastAPI** service, exposing REST endpoints for predictions.  
+* **Docker** is used to containerize the FastAPI service.
+
+#### *Deployment to Kubernetes*
+* **Helm** manages the deployment of the FastAPI model server to a **Kubernetes** cluster.
+
+#### *ArgoCD for Continuous Deployment*
+* **ArgoCD** monitors the Git repository for new versions of the **Helm charts** and automatically updates Kubernetes deployments.
+
+#### Relation to Lecture Material 
+*As per Unit 3:*
+* **Infrastructure-as-Code:** We use **Helm, ArgoCD, and GitHub** to define and manage infrastructure declaratively, avoiding manual configurations.
+* **Cloud-Native:** The system follows **immutable infrastructure**, **microservices (FastAPI model server)**, and **containerized deployments (Docker \+ Kubernetes)**.
+* **CI/CD & Continuous Training:** **Argo Workflows** automates model retraining, **MLflow** tracks performance, and **GitHub Actions** ensures code quality.
+* **Staged Deployment:** **Helm & ArgoCD** manage deployments across **staging, canary, and production**, ensuring safe rollouts. 
