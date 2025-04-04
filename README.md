@@ -81,7 +81,7 @@ The table below shows an example, it is not a recommendation. -->
 | Requirement     | How many/when                                     | Justification |
 |-----------------|---------------------------------------------------|---------------|
 | 3x `m1.medium` VMs | For entire project duration                     | One for data pipeline, one for MLFlow and one for model serving           |
-| 2x `gpu_A100`     | A 4 hour block twice a week               | Development and training of the model. A100 specifically because the training size of a TGNN scales with increase in data size               |
+| 2x `gpu_A100`     | A 4 hour block twice a week               | Development and training of the model. A100 specifically because the training size and time of a TGNN scales with increase in data size               |
 | 2x Floating IPs    |For entire project duration | 1 for FastAPI endpoint and 1 for MLFlow and internal Grafana Dashboard              |
 | 1x `gpu_v100` or less powerful |A 4 hour block every week                                       |Will be required for model serving(inference testing)           |
 | Persistent Store            |  30 GiB                                                  | All data stores amount to about 10-15 GB, continuously storing all models and docker containers will require about ~10 GiB               |
