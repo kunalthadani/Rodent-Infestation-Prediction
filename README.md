@@ -85,23 +85,63 @@ The table below shows an example, it is not a recommendation. -->
 | Floating IPs    | 1 for entire project duration, 1 for sporadic use |               |
 | etc             |                                                   |               |
 
-### Detailed design plan
+## Detailed design plan
 
 <!-- In each section, you should describe (1) your strategy, (2) the relevant parts of the 
 diagram, (3) justification for your strategy, (4) relate back to lecture material, 
 (5) include specific numbers. -->
 
-#### Model training and training platforms
+### Model training and training platforms
 
-<!-- Make sure to clarify how you will satisfy the Unit 4 and Unit 5 requirements, 
-and which optional "difficulty" points you are attempting. -->
+#### Strategy:
 
-#### Model serving and monitoring platforms
+The project will focus on predicting rodent infestation hotspots using Temporal Graph Attention Network. Graph temporal neural networks are well-suited for this as they model both spatial and temporal dependencies of their neighbors. We will model changes in environmental conditions,  sanitation patterns(for e.g. Restaurant health inspection data and garbage collection data) and historical complaints to predict future infestation behaviours. We will gauge the performance of the model by holding out some data and comparing the severity of infestation predicted. The model will be trained and retrained on a fixed timeframe(every week) schedule to update recent changes in the data. To ensure scalability and efficiency, distributed training and hyperparameter tuning will be implemented using Ray Train and Ray Tune. Additionally, model versioning and artifact storage will be integrated into the pipeline to manage different model iterations effectively. 
+
+#### Relevant Parts of the Diagram:
+
+Model Architecture: Temporal Graph Network (TGN) with temporal embeddings to capture dynamic interactions.
+Distributed Training Setup: A Ray cluster with multiple GPUs for parallel training.
+Experiment Tracking and model versioning: MLflow for logging metrics, hyperparameters, and artifacts.
+Checkpointing & Fault Tolerance: Ray Train's built-in checkpointing and fault tolerance mechanisms to ensure recovery from failures.
+Hyperparameter Tuning: Ray Tune integrated with W&B for efficient hyperparameter 
+Optimization.
+
+
+
+#### Justification for Strategy
+
+Temporal Graph Attention Networks: Ideal for dynamic graph-based problems which have both spatial and temporal connections. Graph can be scaled as per data granularity
+
+Ray Train for Distributed Training: Enables scaling across multiple GPUs or nodes while providing fault tolerance through checkpointing ensuring minimal disruption in case of node or worker failures. 
+
+Ray Tune with W&B Integration: Combines the efficiency of Ray Tune's advanced search algorithms (e.g., HyperBand) with real-time monitoring of hyperparameter tuning experiments.
+
+Model Versioning & Artifact Storage: Storing models as artifacts in MLFlow ensures iterations are preserved for comparison, deployment, or rollback if needed.
+
+#### Relating to lecture material
+
+Unit 4 : We will retrain the model every week to update the model with recent data.This will be submitted as a training job as part of the pipeline.
+
+Unit 5:
+Similar to the experiments run in Unit 5 for model training with MLFlow and Ray, we will use Ray Clusters for checkpointing ensuring minimal disruption and MLFlow for versioning the model. 
+
+#### Specific Numbers:
+
+The model size will depend on the granularity of geographic data we choose. The data will be modelled at a chosen granularity-week(space-temporal) level where each node will represent a geographical block based on the granularity selected.
+
+New York City can be divided into ~250 neighborhoods which can be nodes in the graph. On a weekly level, we have 52 * 5 = 260 weeks of data. 
+Each node will have subsequent edges with its neighbours and additional temporal edges with nodes for the next week.
+
+To train this model, we will ideally need  2X A100 GPUs twice a week for about 3-4 hours during development and can move to once a week(time required will be known based on the development training experiments) during actual deployment.
+
+
+
+### Model serving and monitoring platforms
 
 <!-- Make sure to clarify how you will satisfy the Unit 6 and Unit 7 requirements, 
 and which optional "difficulty" points you are attempting. -->
 
-#### Data pipeline
+### Data pipeline
 
 <!-- Make sure to clarify how you will satisfy the Unit 8 requirements,  and which 
 optional "difficulty" points you are attempting. -->
@@ -114,7 +154,7 @@ optional "difficulty" points you are attempting. -->
 - [Difficulty point] During the ETL pipeline, metadata (number of new instances, any missing data, errors, etc) of the data retrieved for training will be sent to Prometheus. The high level view of this will be queryable in Grafana for the team members
 
 
-#### Continuous X
+### Continuous X
 
 <!-- Make sure to clarify how you will satisfy the Unit 3 requirements,  and which 
 optional "difficulty" points you are attempting. -->
