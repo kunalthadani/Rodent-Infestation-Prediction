@@ -137,6 +137,15 @@ To train this model, we will ideally need  2X A100 GPUs twice a week for about 3
 
 
 ### Model serving and monitoring platforms
+The steps that will be taken to implement model serving and monitoring platforms are as follows:
+- Model serving:
+    - After the latest version of the model has been stored as an artifact by MLFlow, FastAPI will be used to wrap the artifact into a standalone inference service as can be seen in the system design diagram.
+    - As a part of development, we will perform benchmarking tests to find the optimal system and model optimizations specifically for serving, aiming to achieve an inference time of about 10-15 seconds.
+    - We will also have a frontend deployed that will serve as the user interface. This UI will let the user select a geographical block, the granularity of which will be decided upon experimentation during development, from a drop-down list/search bar and also a specific duration of time for which the severity of rodent infestation needs to be calculated, hence justifying the need for FastAPI.
+    - The inference will return both a severity score and a link to the grafana dashboard for further visualization.
+    - (Extra Difficulty Points) Developing multiple options for inference servers, especially server-grade CPU and GPU will be attempted.
+- Model Monitoring:
+    - 
 
 <!-- Make sure to clarify how you will satisfy the Unit 6 and Unit 7 requirements, 
 and which optional "difficulty" points you are attempting. -->
