@@ -18,16 +18,16 @@ propose a system for a science problem, for example.)
 - Our value proposition: optimized waste collection to reduce rodent infestation, targeted cleanup in high-risk areas, runs rodent mitigation programs like rat-proof trash bins and waste management policies
 
 ### NYC Housing Authority
-- Existing business model: Manages public housing for low-income residents, handles maintenance and pest control within its properties, responds to resident complaints about infestations.
+- Existing business model: manages public housing for low-income residents, handles maintenance and pest control within its properties, responds to resident complaints about infestations.
 - Our value proposition: proactive pest control, reduced infrastructure damage, costs savings as prevention is cheaper than cure
 
 ### Insurance Companies (Insurent, Rhino, etc.)
-- Existing business model: Assesses risks related to property damage and liability, offers policies that may or may not cover rodent damage.
-- Our value proposition: Better Risk Assessment (adjusts property insurance pricing based on rodent activity data,) new Policy Offerings (could offer pest insurance to high-risk areas), fewer Payouts (encourages policyholders to take preventive actions, reducing claims)
+- Existing business model: assesses risks related to property damage and liability, offers policies that may or may not cover rodent damage.
+- Our value proposition: better risk assessment (adjusts property insurance pricing based on rodent activity data), new policy offerings (could offer pest insurance to high-risk areas), fewer payouts (encourages policyholders to take preventive actions, reducing claims)
 
 ### Pest Control Companies
 - Existing business model: provides extermination and pest prevention services, operates reactively based on customer complaints
-- Our value proposition: predictive pest control Services (can offer preemptive treatment plans before infestations start), better Resource Allocation (deploys technicians where they’re needed most), increased revenue (subscription-based prevention services could be introduced)
+- Our value proposition: predictive pest control Services (can offer preemptive treatment plans before infestations start), better resource allocation (deploys technicians where they’re needed most), increased revenue (subscription-based prevention services could be introduced)
 
 ---
 ### Contributors
@@ -105,6 +105,12 @@ and which optional "difficulty" points you are attempting. -->
 
 <!-- Make sure to clarify how you will satisfy the Unit 8 requirements,  and which 
 optional "difficulty" points you are attempting. -->
+- Persistant storage: 30GB of storage on Chameleon Object Store to store the models (storing 30 previous models), datasets (10-15GB), docker containers (5GB), etc
+- Offline data that is used for training is stored in the persistant storage. The data will be split into training, testing and validation. Some of the validation data will be saved for production data, that will be used to test the model after deployment in production
+- The datasets are updated daily, we are running a Python script to download the newer data and transform it
+- Since the NYC datasets do not contain the neighbourhood data, we will be transforming the data to include that using geo-spacial data and lat-long co-ordinates for inferencing
+- For simulating the real world data, we require how far along does the end user require the prediction (1 week, 1 month, 2 weeks, etc.), lat-long co-ordinates or a geographical block (will depend on granularity chosen)
+- [Difficulty point] During the ETL pipeline, metadata (number of new instances, any missing data, errors, etc) of the data retrieved for training will be sent to Prometheus. The high level view of this will be queryable in Grafana for the team members
 
 #### Continuous X
 
