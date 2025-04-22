@@ -13,21 +13,9 @@ propose a system for a science problem, for example.)
 
 ## Value proposition
 
-### NYC Department of Sanitation
-- Existing business model: Manages waste collection and disposal to maintain public cleanliness, issues fines for improper garbage disposal, runs pests/rodent mitigation programs like rat-proof trash bins and waste management policies 
-- Our value proposition: optimized waste collection to reduce rodent infestation, targeted cleanup in high-risk areas, runs rodent mitigation programs like rat-proof trash bins and waste management policies
-
-### NYC Housing Authority
-- Existing business model: manages public housing for low-income residents, handles maintenance and pest control within its properties, responds to resident complaints about infestations.
-- Our value proposition: proactive pest control, reduced infrastructure damage, costs savings as prevention is cheaper than cure
-
-### Insurance Companies (Insurent, Rhino, etc.)
-- Existing business model: assesses risks related to property damage and liability, offers policies that may or may not cover rodent damage.
-- Our value proposition: better risk assessment (adjusts property insurance pricing based on rodent activity data), new policy offerings (could offer pest insurance to high-risk areas), fewer payouts (encourages policyholders to take preventive actions, reducing claims)
-
-### Pest Control Companies
-- Existing business model: provides extermination and pest prevention services, operates reactively based on customer complaints
-- Our value proposition: predictive pest control Services (can offer preemptive treatment plans before infestations start), better resource allocation (deploys technicians where they’re needed most), increased revenue (subscription-based prevention services could be introduced)
+### NYC Department of Health and Mental Hygiene
+- Existing business model: The New York City Department of Health and Mental Hygiene (DOHMH) uses a multi-pronged approach to address rodent infestations, combining public health interventions with private sector involvement. DOHMH primarily focuses on preventing and controlling infestations through inspections.
+- Our value proposition: Use historic inspection data along with real-time weather, construction and garbage complaints to preemptively predict the probability of infestation occurrence in restaurants belonging to a pre-defined geographic radius 
 
 ---
 
