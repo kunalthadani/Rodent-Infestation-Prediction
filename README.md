@@ -13,21 +13,9 @@ propose a system for a science problem, for example.)
 
 ## Value proposition
 
-### NYC Department of Sanitation
-- Existing business model: Manages waste collection and disposal to maintain public cleanliness, issues fines for improper garbage disposal, runs pests/rodent mitigation programs like rat-proof trash bins and waste management policies 
-- Our value proposition: optimized waste collection to reduce rodent infestation, targeted cleanup in high-risk areas, runs rodent mitigation programs like rat-proof trash bins and waste management policies
-
-### NYC Housing Authority
-- Existing business model: manages public housing for low-income residents, handles maintenance and pest control within its properties, responds to resident complaints about infestations.
-- Our value proposition: proactive pest control, reduced infrastructure damage, costs savings as prevention is cheaper than cure
-
-### Insurance Companies (Insurent, Rhino, etc.)
-- Existing business model: assesses risks related to property damage and liability, offers policies that may or may not cover rodent damage.
-- Our value proposition: better risk assessment (adjusts property insurance pricing based on rodent activity data), new policy offerings (could offer pest insurance to high-risk areas), fewer payouts (encourages policyholders to take preventive actions, reducing claims)
-
-### Pest Control Companies
-- Existing business model: provides extermination and pest prevention services, operates reactively based on customer complaints
-- Our value proposition: predictive pest control Services (can offer preemptive treatment plans before infestations start), better resource allocation (deploys technicians where they’re needed most), increased revenue (subscription-based prevention services could be introduced)
+### NYC Department of Health and Mental Hygiene
+- Existing business model: The New York City Department of Health and Mental Hygiene (DOHMH) uses a multi-pronged approach to address rodent infestations, combining public health interventions with private sector involvement. DOHMH primarily focuses on preventing and controlling infestations through inspections.
+- Our value proposition: Use historic inspection data along with real-time weather, construction and garbage complaints to preemptively predict the probability of infestation occurrence in restaurants belonging to a pre-defined geographic radius 
 
 ---
 
@@ -62,12 +50,11 @@ conditions under which it may be used. -->
 
 |                                             | How it was created                                         | Conditions of use                                         | Links    |
 |---------------------------------------------|------------------------------------------------------------|-----------------------------------------------------------|----------|
-| 2020 Neighborhood Tabulation Areas (NTAs)   | Department of City Planning (DCP)                          | Public domain                                             | [Link](https://data.cityofnewyork.us/City-Government/2020-Neighborhood-Tabulation-Areas-NTAs-/9nt8-h7nd/about_data)
+| Rat Sightings                               | 311 Service Requests                                       | Public domain                                             | [Link](https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe/about_data)
 | 311 Rodent Complaints                       | Subset of 311 complaints by Louis DeBellis on NYC Open Data| Public domain                                             | [Link](https://data.cityofnewyork.us/Social-Services/311-Rodent-Complaints/cvf2-zn8s/about_data)
 | Restaurant Inspection Results               | Department of Health and Mental Hygiene (DOHMH)            | Public domain                                             | [Link](https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data)
 | NOAA Climate Data                           | NOAA National Centers for Environmental Information        | FAIR (Findable, Accessible, Interoperable, and Reusable)  | [Link](https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C00861/html)
-| Garbage Collection Frequencies              | Department of Sanitation                                   | Public domain                                             | [Link](https://data.cityofnewyork.us/City-Government/DSNY-Frequencies/rv63-53db/about_data)
-| Monthly Monthly Tonnage Data                | Department of Sanitation                                   | Public domain                                             | [Link](https://data.cityofnewyork.us/City-Government/DSNY-Monthly-Tonnage-Data/ebb7-mvp5/about_data)
+| DOB NOW: Build – Approved Permits           |Department of Buildings (DOB)                               | Public domain                                             | [Link](https://data.cityofnewyork.us/Housing-Development/DOB-NOW-Build-Approved-Permits/rbx6-tga4/about_data)
 |A3T-GCN: Attention Temporal Graph Convolutional Network for Traffic Forecasting| Jiawei Zhu | Open Access CC BY 4.0 | [Paper](https://arxiv.org/pdf/2006.11583) [GitHub](https://github.com/lehaifeng/T-GCN)
 
 
@@ -80,10 +67,11 @@ The table below shows an example, it is not a recommendation. -->
 
 | Requirement     | How many/when                                     | Justification |
 |-----------------|---------------------------------------------------|---------------|
-| `m1.medium` VMs | 3 for entire project duration                     | ...           |
-| `gpu_mi100`     | 4 hour block twice a week                         |               |
-| Floating IPs    | 1 for entire project duration, 1 for sporadic use |               |
-| etc             |                                                   |               |
+| 3x `m1.medium` VMs | For entire project duration                     | One for data pipeline, one for MLFlow and one for model serving           |
+| 2x `gpu_A100`     | A 4 hour block twice a week               | Development and training of the model. A100 specifically because the training size and time of a TGNN scales with increase in data size               |
+| 2x Floating IPs    |For entire project duration | 1 for FastAPI endpoint and 1 for MLFlow and internal Grafana Dashboard              |
+| 1x `gpu_v100` or less powerful |A 4 hour block every week                                       |Will be required for model serving(inference testing)           |
+| Persistent Store            |  30 GiB                                                  | All data stores amount to about 10-15 GB, continuously storing all models and docker containers will require about ~10 GiB               |
 
 ## Detailed design plan
 
@@ -137,6 +125,21 @@ To train this model, we will ideally need  2X A100 GPUs twice a week for about 3
 
 
 ### Model serving and monitoring platforms
+The steps that will be taken to implement model serving and monitoring platforms are as follows:
+- Model serving:
+    - After the latest version of the model has been stored as an artifact by MLFlow, FastAPI will be used to wrap the artifact into a standalone inference service as can be seen in the system design diagram, this is in reference to unit 6 as a part of Lab Part 3.
+    - As a part of development, we will perform benchmarking tests to find the optimal system and model optimizations specifically for serving, aiming to achieve an inference time of about 10-15 seconds, this is in reference to unit 6 specifically covering Lab Part 1 and 3.
+    - We will also have a frontend deployed that will serve as the user interface. This UI will let the user select a geographical block, the granularity of which will be decided upon experimentation during development, from a drop-down list/search bar and also a specific duration of time for which the severity of rodent infestation needs to be calculated, hence justifying the need for FastAPI.
+    - The inference will return both a severity score and a link to the grafana dashboard for further visualization.
+    - (Extra Difficulty Points) Developing multiple options for inference servers, especially server-grade CPU and GPU will be attempted.
+- Model Monitoring:
+    - As soon as the latest artifact is ready and wrapped in FastAPI, a series of offline tests, as per unit 7 will be performed through the help of the continous X pipeline as follows:
+        - A sanity check is performed to make sure the system is working normally from a general standpoint.
+        - A unit testing will then be performed to test optimizing, operational and behavioural metrics, especially metrics like accuracy, loss and inference time. 
+        - All unit tests should pass or else the tested build version is considered to have failed and an alert will be sent to prometheus which will then be displayed on the internal grafana dashboard. 
+        - Both of these services as well as the flow can be seen in the system design diagram.
+    - A load test in staging is performed after all the offline tests are passed.
+    - We then perform an online canary test, as per the slides in unit 7.
 
 <!-- Make sure to clarify how you will satisfy the Unit 6 and Unit 7 requirements, 
 and which optional "difficulty" points you are attempting. -->
@@ -155,8 +158,43 @@ optional "difficulty" points you are attempting. -->
 
 
 ### Continuous X
+To ensure the model remains accurate and effective over time, we implement a CI/CD/CT pipeline that automates training, evaluation, deployment, and monitoring. The pipeline integrates modern DevOps tools such as Argo Workflows, Helm, GitHub Actions, MLflow, and Kubernetes to ensure seamless operation in a cloud-native environment.
 
-<!-- Make sure to clarify how you will satisfy the Unit 3 requirements,  and which 
-optional "difficulty" points you are attempting. -->
+**Continuous Integration (CI)**
+#### *Version Control and Automation*
+* **GitHub** is used for version control, where all model code, infrastructure configurations (Infrastructure-as-Code), and deployment scripts are maintained.  
+* **GitHub Actions** automates code quality checks and unit tests for data and model pre-processing.
 
+**Continuous Training (CT)**
+#### *Automated Model Retraining Workflow*
+* The model needs to adapt to changing environmental and sanitation conditions.  
+* A weekly scheduled job in **Argo Workflows** retrains the model with the latest data.  
+* The workflow job is:  
+1. Loads the latest dataset from **Chameleon persistent storage**.  
+2. Preprocesses and engineers features.  
+3. Trains the model.  
+4. Logs the new model and its metrics in **MLflow**.  
+5. Runs an offline evaluation against the previous model.  
+6. If performance surpasses a predefined threshold, the model is registered for deployment.  
+* If a significant drift in model performance is detected:  
+1. A retraining job is triggered automatically.  
+2. The new model is evaluated against the previous version.  
+3. If the new model outperforms the old one, it is deployed following the CX pipeline.
 
+**Continuous Deployment (CD)**
+#### *Containerization and Deployment*
+* The trained model is packaged as a **FastAPI** service, exposing REST endpoints for predictions.  
+* **Docker** is used to containerize the FastAPI service.
+
+#### *Deployment to Kubernetes*
+* **Helm** manages the deployment of the FastAPI model server to a **Kubernetes** cluster.
+
+#### *ArgoCD for Continuous Deployment*
+* **ArgoCD** monitors the Git repository for new versions of the **Helm charts** and automatically updates Kubernetes deployments.
+
+#### Relation to Lecture Material 
+*As per Unit 3:*
+* **Infrastructure-as-Code:** We use **Helm, ArgoCD, and GitHub** to define and manage infrastructure declaratively, avoiding manual configurations.
+* **Cloud-Native:** The system follows **immutable infrastructure**, **microservices (FastAPI model server)**, and **containerized deployments (Docker \+ Kubernetes)**.
+* **CI/CD & Continuous Training:** **Argo Workflows** automates model retraining, **MLflow** tracks performance, and **GitHub Actions** ensures code quality.
+* **Staged Deployment:** **Helm & ArgoCD** manage deployments across **staging, canary, and production**, ensuring safe rollouts. 
