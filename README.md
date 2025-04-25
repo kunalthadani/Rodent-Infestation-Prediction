@@ -83,12 +83,12 @@ diagram, (3) justification for your strategy, (4) relate back to lecture materia
 
 #### Strategy:
 
-The project will focus on predicting rodent infestation hotspots using Temporal Graph Attention Network. Graph temporal neural networks are well-suited for this as they model both spatial and temporal dependencies of their neighbors. We will model changes in environmental conditions,  sanitation patterns(for e.g. Restaurant health inspection data and garbage collection data) and historical complaints to predict future infestation behaviours. We will gauge the performance of the model by holding out some data and comparing the severity of infestation predicted. The model will be trained and retrained on a fixed timeframe(every week) schedule to update recent changes in the data. To ensure scalability and efficiency, distributed training and hyperparameter tuning will be implemented using Ray Train and Ray Tune. Additionally, model versioning and artifact storage will be integrated into the pipeline to manage different model iterations effectively. 
+The project will focus on predicting rodent infestation in restaurants using a combination of multiple models. Graph attention networks are well-suited to predict the movement of rat infestations as we can model spatial dependencies on the neighbors. We will use a tree based model (XGBoost or Balanced Random Forest) to predict if there is a high chance of the restaurant being infested by rodents. We will use the predicted rodent infestation in the neighborhood (from the graph network) and combine it with historical inspection scores, and other relevant factors. We will gauge the performance of the model by holding out some data and checking if we are giving better predictions than the existing inspection results. The model will be trained and retrained on a fixed timeframe(every week) schedule to update recent changes in the data. Additionally, model versioning and artifact storage will be integrated into the pipeline to manage different model iterations effectively.  
 
 #### Relevant Parts of the Diagram:
 
-Model Architecture: Temporal Graph Network (TGN) with temporal embeddings to capture dynamic interactions.
-Distributed Training Setup: A Ray cluster with multiple GPUs for parallel training.
+Model Architecture: Graph attention Network (GAT) with temporal data to capture dynamic interactions. Tree based model for each borough to capture restaurant specific information
+Distributed Training Setup: A Ray cluster with multiple nodes for parallel training.
 Experiment Tracking and model versioning: MLflow for logging metrics, hyperparameters, and artifacts.
 Checkpointing & Fault Tolerance: Ray Train's built-in checkpointing and fault tolerance mechanisms to ensure recovery from failures.
 Hyperparameter Tuning: Ray Tune integrated with W&B for efficient hyperparameter 
@@ -98,9 +98,9 @@ Optimization.
 
 #### Justification for Strategy
 
-Temporal Graph Attention Networks: Ideal for dynamic graph-based problems which have both spatial and temporal connections. Graph can be scaled as per data granularity
+Temporal Graph Attention Networks: Ideal for dynamic graph-based problems which have both spatial and temporal connections. Graph can be scaled as per data granularity. Tree based models will be able to capture past data based on historical and surrounding features.
 
-Ray Train for Distributed Training: Enables scaling across multiple GPUs or nodes while providing fault tolerance through checkpointing ensuring minimal disruption in case of node or worker failures. 
+Ray Train for Distributed Training: Enables scaling across multiple nodes while providing fault tolerance through checkpointing ensuring minimal disruption in case of node or worker failures. 
 
 Ray Tune with W&B Integration: Combines the efficiency of Ray Tune's advanced search algorithms (e.g., HyperBand) with real-time monitoring of hyperparameter tuning experiments.
 
@@ -115,13 +115,16 @@ Similar to the experiments run in Unit 5 for model training with MLFlow and Ray,
 
 #### Specific Numbers:
 
-The model size will depend on the granularity of geographic data we choose. The data will be modelled at a chosen granularity-week(space-temporal) level where each node will represent a geographical block based on the granularity selected.
+The model size will depend on the granularity of geographic data we choose. We will create a radius of a fixed diameter around each resaurant. The data points within the diameter (rodent infestations, garbage, etc) will be considered in the tree model. Additionally, each of these circles will be considered as a node in the graph.
 
-New York City can be divided into ~250 neighborhoods which can be nodes in the graph. On a weekly level, we have 52 * 5 = 260 weeks of data. 
-Each node will have subsequent edges with its neighbours and additional temporal edges with nodes for the next week.
+New York City has around 30,000 restaurants. On a monthly level, we will have 120 weeks of data for 10 years
 
-To train this model, we will ideally need  2X A100 GPUs twice a week for about 3-4 hours during development and can move to once a week(time required will be known based on the development training experiments) during actual deployment.
+<!-- New York City can be divided into ~250 neighborhoods which can be nodes in the graph. On a weekly level, we have 52 * 5 = 260 weeks of data. 
+Each node will have subsequent edges with its neighbours and additional temporal edges with nodes for the next week. -->
 
+Based on the graph size, we can use a 1 or 2 nodes to train the models, which will be retrained every week.
+
+<!-- To train this model, we will ideally need  2X A100 GPUs twice a week for about 3-4 hours during development and can move to once a week(time required will be known based on the development training experiments) during actual deployment. -->
 
 
 ### Model serving and monitoring platforms
