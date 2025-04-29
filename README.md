@@ -13,21 +13,9 @@ propose a system for a science problem, for example.)
 
 ## Value proposition
 
-### NYC Department of Sanitation
-- Existing business model: Manages waste collection and disposal to maintain public cleanliness, issues fines for improper garbage disposal, runs pests/rodent mitigation programs like rat-proof trash bins and waste management policies 
-- Our value proposition: optimized waste collection to reduce rodent infestation, targeted cleanup in high-risk areas, runs rodent mitigation programs like rat-proof trash bins and waste management policies
-
-### NYC Housing Authority
-- Existing business model: manages public housing for low-income residents, handles maintenance and pest control within its properties, responds to resident complaints about infestations.
-- Our value proposition: proactive pest control, reduced infrastructure damage, costs savings as prevention is cheaper than cure
-
-### Insurance Companies (Insurent, Rhino, etc.)
-- Existing business model: assesses risks related to property damage and liability, offers policies that may or may not cover rodent damage.
-- Our value proposition: better risk assessment (adjusts property insurance pricing based on rodent activity data), new policy offerings (could offer pest insurance to high-risk areas), fewer payouts (encourages policyholders to take preventive actions, reducing claims)
-
-### Pest Control Companies
-- Existing business model: provides extermination and pest prevention services, operates reactively based on customer complaints
-- Our value proposition: predictive pest control Services (can offer preemptive treatment plans before infestations start), better resource allocation (deploys technicians where they’re needed most), increased revenue (subscription-based prevention services could be introduced)
+### NYC Department of Health and Mental Hygiene
+- Existing business model: The New York City Department of Health and Mental Hygiene (DOHMH) uses a multi-pronged approach to address rodent infestations, combining public health interventions with private sector involvement. DOHMH primarily focuses on preventing and controlling infestations through inspections.
+- Our value proposition: Use historic inspection data along with real-time weather, construction and garbage complaints to preemptively predict the probability of infestation occurrence in restaurants belonging to a pre-defined geographic radius 
 
 ---
 
@@ -62,12 +50,11 @@ conditions under which it may be used. -->
 
 |                                             | How it was created                                         | Conditions of use                                         | Links    |
 |---------------------------------------------|------------------------------------------------------------|-----------------------------------------------------------|----------|
-| 2020 Neighborhood Tabulation Areas (NTAs)   | Department of City Planning (DCP)                          | Public domain                                             | [Link](https://data.cityofnewyork.us/City-Government/2020-Neighborhood-Tabulation-Areas-NTAs-/9nt8-h7nd/about_data)
+| Rat Sightings                               | 311 Service Requests                                       | Public domain                                             | [Link](https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe/about_data)
 | 311 Rodent Complaints                       | Subset of 311 complaints by Louis DeBellis on NYC Open Data| Public domain                                             | [Link](https://data.cityofnewyork.us/Social-Services/311-Rodent-Complaints/cvf2-zn8s/about_data)
 | Restaurant Inspection Results               | Department of Health and Mental Hygiene (DOHMH)            | Public domain                                             | [Link](https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data)
 | NOAA Climate Data                           | NOAA National Centers for Environmental Information        | FAIR (Findable, Accessible, Interoperable, and Reusable)  | [Link](https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C00861/html)
-| Garbage Collection Frequencies              | Department of Sanitation                                   | Public domain                                             | [Link](https://data.cityofnewyork.us/City-Government/DSNY-Frequencies/rv63-53db/about_data)
-| Monthly Monthly Tonnage Data                | Department of Sanitation                                   | Public domain                                             | [Link](https://data.cityofnewyork.us/City-Government/DSNY-Monthly-Tonnage-Data/ebb7-mvp5/about_data)
+| DOB NOW: Build – Approved Permits           |Department of Buildings (DOB)                               | Public domain                                             | [Link](https://data.cityofnewyork.us/Housing-Development/DOB-NOW-Build-Approved-Permits/rbx6-tga4/about_data)
 |A3T-GCN: Attention Temporal Graph Convolutional Network for Traffic Forecasting| Jiawei Zhu | Open Access CC BY 4.0 | [Paper](https://arxiv.org/pdf/2006.11583) [GitHub](https://github.com/lehaifeng/T-GCN)
 
 
@@ -81,7 +68,7 @@ The table below shows an example, it is not a recommendation. -->
 | Requirement     | How many/when                                     | Justification |
 |-----------------|---------------------------------------------------|---------------|
 | 3x `m1.medium` VMs | For entire project duration                     | One for data pipeline, one for MLFlow and one for model serving           |
-| 2x `gpu_A100`     | A 4 hour block twice a week               | Development and training of the model. A100 specifically because the training size of a TGNN scales with increase in data size               |
+| 2x `gpu_A100`     | A 4 hour block twice a week               | Development and training of the model. A100 specifically because the training size and time of a TGNN scales with increase in data size               |
 | 2x Floating IPs    |For entire project duration | 1 for FastAPI endpoint and 1 for MLFlow and internal Grafana Dashboard              |
 | 1x `gpu_v100` or less powerful |A 4 hour block every week                                       |Will be required for model serving(inference testing)           |
 | Persistent Store            |  30 GiB                                                  | All data stores amount to about 10-15 GB, continuously storing all models and docker containers will require about ~10 GiB               |
@@ -96,12 +83,12 @@ diagram, (3) justification for your strategy, (4) relate back to lecture materia
 
 #### Strategy:
 
-The project will focus on predicting rodent infestation hotspots using Temporal Graph Attention Network. Graph temporal neural networks are well-suited for this as they model both spatial and temporal dependencies of their neighbors. We will model changes in environmental conditions,  sanitation patterns(for e.g. Restaurant health inspection data and garbage collection data) and historical complaints to predict future infestation behaviours. We will gauge the performance of the model by holding out some data and comparing the severity of infestation predicted. The model will be trained and retrained on a fixed timeframe(every week) schedule to update recent changes in the data. To ensure scalability and efficiency, distributed training and hyperparameter tuning will be implemented using Ray Train and Ray Tune. Additionally, model versioning and artifact storage will be integrated into the pipeline to manage different model iterations effectively. 
+The project will focus on predicting rodent infestation in restaurants using a combination of multiple models. Graph attention networks are well-suited to predict the movement of rat infestations as we can model spatial dependencies on the neighbors. We will use a tree based model (XGBoost or Balanced Random Forest) to predict if there is a high chance of the restaurant being infested by rodents. We will use the predicted rodent infestation in the neighborhood (from the graph network) and combine it with historical inspection scores, and other relevant factors. We will gauge the performance of the model by holding out some data and checking if we are giving better predictions than the existing inspection results. The model will be trained and retrained on a fixed timeframe(every week) schedule to update recent changes in the data. Additionally, model versioning and artifact storage will be integrated into the pipeline to manage different model iterations effectively.  
 
 #### Relevant Parts of the Diagram:
 
-Model Architecture: Temporal Graph Network (TGN) with temporal embeddings to capture dynamic interactions.
-Distributed Training Setup: A Ray cluster with multiple GPUs for parallel training.
+Model Architecture: Graph attention Network (GAT) with temporal data to capture dynamic interactions. Tree based model for each borough to capture restaurant specific information
+Distributed Training Setup: A Ray cluster with multiple nodes for parallel training.
 Experiment Tracking and model versioning: MLflow for logging metrics, hyperparameters, and artifacts.
 Checkpointing & Fault Tolerance: Ray Train's built-in checkpointing and fault tolerance mechanisms to ensure recovery from failures.
 Hyperparameter Tuning: Ray Tune integrated with W&B for efficient hyperparameter 
@@ -111,9 +98,9 @@ Optimization.
 
 #### Justification for Strategy
 
-Temporal Graph Attention Networks: Ideal for dynamic graph-based problems which have both spatial and temporal connections. Graph can be scaled as per data granularity
+Temporal Graph Attention Networks: Ideal for dynamic graph-based problems which have both spatial and temporal connections. Graph can be scaled as per data granularity. Tree based models will be able to capture past data based on historical and surrounding features.
 
-Ray Train for Distributed Training: Enables scaling across multiple GPUs or nodes while providing fault tolerance through checkpointing ensuring minimal disruption in case of node or worker failures. 
+Ray Train for Distributed Training: Enables scaling across multiple nodes while providing fault tolerance through checkpointing ensuring minimal disruption in case of node or worker failures. 
 
 Ray Tune with W&B Integration: Combines the efficiency of Ray Tune's advanced search algorithms (e.g., HyperBand) with real-time monitoring of hyperparameter tuning experiments.
 
@@ -128,13 +115,16 @@ Similar to the experiments run in Unit 5 for model training with MLFlow and Ray,
 
 #### Specific Numbers:
 
-The model size will depend on the granularity of geographic data we choose. The data will be modelled at a chosen granularity-week(space-temporal) level where each node will represent a geographical block based on the granularity selected.
+The model size will depend on the granularity of geographic data we choose. We will create a radius of a fixed diameter around each resaurant. The data points within the diameter (rodent infestations, garbage, etc) will be considered in the tree model. Additionally, each of these circles will be considered as a node in the graph.
 
-New York City can be divided into ~250 neighborhoods which can be nodes in the graph. On a weekly level, we have 52 * 5 = 260 weeks of data. 
-Each node will have subsequent edges with its neighbours and additional temporal edges with nodes for the next week.
+New York City has around 30,000 restaurants. On a monthly level, we will have 120 weeks of data for 10 years
 
-To train this model, we will ideally need  2X A100 GPUs twice a week for about 3-4 hours during development and can move to once a week(time required will be known based on the development training experiments) during actual deployment.
+<!-- New York City can be divided into ~250 neighborhoods which can be nodes in the graph. On a weekly level, we have 52 * 5 = 260 weeks of data. 
+Each node will have subsequent edges with its neighbours and additional temporal edges with nodes for the next week. -->
 
+Based on the graph size, we can use a 1 or 2 nodes to train the models, which will be retrained every week.
+
+<!-- To train this model, we will ideally need  2X A100 GPUs twice a week for about 3-4 hours during development and can move to once a week(time required will be known based on the development training experiments) during actual deployment. -->
 
 
 ### Model serving and monitoring platforms
