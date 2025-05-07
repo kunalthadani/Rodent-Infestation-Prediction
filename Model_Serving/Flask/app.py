@@ -1,10 +1,13 @@
 import joblib
 import pandas as pd
 from flask import Flask, redirect, url_for, request, render_template
+from prometheus_flask_exporter import PrometheusMetrics
 
 import os
 
 app = Flask(__name__)
+
+metrics = PrometheusMetrics(app)
 
 york_boroughs = [
     'Manhattan',
@@ -14,13 +17,10 @@ york_boroughs = [
     'Staten Island'
 ]
 
-# @app.route('/', methods=['GET'])
-# def index():
-#     return render_template('index.html')
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     result = None
+    op = None
     if request.method == 'POST':
         borough = request.form.get('borough')
         # TODO: replace this with your custom logic
@@ -44,4 +44,4 @@ def index():
     return render_template('index.html', boroughs=york_boroughs, result=result, op = op)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=False)
