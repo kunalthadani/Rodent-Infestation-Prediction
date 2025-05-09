@@ -25,13 +25,14 @@ metadata:
   name: postgres-pvc
   namespace: rodent-platform
 spec:
+  volumeName: pv-postgres
   storageClassName: local-static
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
-    volumeName: pv-postgres
+    
 ---
 apiVersion: apps/v1
 kind: Deployment
