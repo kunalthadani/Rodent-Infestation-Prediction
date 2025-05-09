@@ -55,7 +55,7 @@ conditions under which it may be used. -->
 | Restaurant Inspection Results               | Department of Health and Mental Hygiene (DOHMH)            | Public domain                                             | [Link](https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data)
 | NOAA Climate Data                           | NOAA National Centers for Environmental Information        | FAIR (Findable, Accessible, Interoperable, and Reusable)  | [Link](https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C00861/html)
 | DOB NOW: Build – Approved Permits           |Department of Buildings (DOB)                               | Public domain                                             | [Link](https://data.cityofnewyork.us/Housing-Development/DOB-NOW-Build-Approved-Permits/rbx6-tga4/about_data)
-|A3T-GCN: Attention Temporal Graph Convolutional Network for Traffic Forecasting| Jiawei Zhu | Open Access CC BY 4.0 | [Paper](https://arxiv.org/pdf/2006.11583) [GitHub](https://github.com/lehaifeng/T-GCN)
+|GAT: Graph Attention Network| Petar Veličković | MIT License | [Paper](https://arxiv.org/pdf/1710.10903v3) [GitHub](https://github.com/PetarV-/GAT)
 
 
 
@@ -67,10 +67,10 @@ The table below shows an example, it is not a recommendation. -->
 
 | Requirement     | How many/when                                     | Justification |
 |-----------------|---------------------------------------------------|---------------|
-| 3x `m1.medium` VMs | For entire project duration                     | One for data pipeline, one for MLFlow and one for model serving           |
-| 2x `gpu_A100`     | A 4 hour block twice a week               | Development and training of the model. A100 specifically because the training size and time of a TGNN scales with increase in data size               |
-| 2x Floating IPs    |For entire project duration | 1 for FastAPI endpoint and 1 for MLFlow and internal Grafana Dashboard              |
-| 1x `gpu_v100` or less powerful |A 4 hour block every week                                       |Will be required for model serving(inference testing)           |
+| 3x `m1.medium` VMs | For entire project duration                     | One for data pipeline, MLFlow, one for evaluation and one for model serving           |
+| 2x `gpu_mi100`     | A 4 hour block twice a week               | Development and training of the model. mi100 specifically because the training size and time of a TGNN scales with increase in data size               |
+| 2x Floating IPs    |For entire project duration | 1 for FastAPI endpoint(KVM@TACC) and 1 for gpu instance(CHI@TACC)              |
+| 1x `gpu_mi100` or less powerful |A 4 hour block every week                                       |Will be required for model serving(inference testing)           |
 | Persistent Store            |  30 GiB                                                  | All data stores amount to about 10-15 GB, continuously storing all models and docker containers will require about ~10 GiB               |
 
 ## Detailed design plan
@@ -98,7 +98,7 @@ Optimization.
 
 #### Justification for Strategy
 
-Temporal Graph Attention Networks: Ideal for dynamic graph-based problems which have both spatial and temporal connections. Graph can be scaled as per data granularity. Tree based models will be able to capture past data based on historical and surrounding features.
+ Graph Attention Networks: Ideal for dynamic graph-based problems which have both spatial and temporal connections. Graph can be scaled as per data granularity. Tree based models will be able to capture past data based on historical and surrounding features.
 
 Ray Train for Distributed Training: Enables scaling across multiple nodes while providing fault tolerance through checkpointing ensuring minimal disruption in case of node or worker failures. 
 

@@ -2,3 +2,4 @@ joblib
 pandas
 Flask
 imblearn
+prometheus_flask_exporter
