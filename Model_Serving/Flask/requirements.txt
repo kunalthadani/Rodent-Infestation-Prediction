@@ -1,5 +1,15 @@
 joblib
 pandas
+numpy
 Flask
 imblearn
 prometheus_flask_exporter
+mlflow
+xgboost
+scikit-learn
+librosa
+lightning
+torch
+torch-geometric
+scipy
+matplotlib

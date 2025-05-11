@@ -7,10 +7,10 @@ WORKDIR /app
 # Copy the requirements.txt into the container at /app
 # we do this separately so that the "expensive" build step (pip install)
 # does not need to be repeated if other files in /app change.
-COPY requirements.txt /app
+COPY model_requirements.txt requirements.txt ./
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt -c model_requirements.txt
 
 # Copy the current directory contents into the container at /app
 COPY . /app
@@ -19,4 +19,4 @@ COPY . /app
 EXPOSE 5000
 
 # Run the command to start the Flask server
-CMD ["python","app.py"]
+CMD ["python","-u","app.py"]
