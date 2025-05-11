@@ -1,5 +1,5 @@
 ---
-- name: Deploy Gourmetgram Staging via ArgoCD & Helm
+- name: Deploy Rodent Staging via ArgoCD & Helm
   hosts: node1
   become: yes
   vars:
