@@ -26,7 +26,7 @@
     argo_namespace: argo
 
   tasks:
-    - name: Clone or update gourmetgram-iac repo
+    - name: Clone or update rodent repo
       git:
         repo: "{{ repo_url }}"
         dest: "{{ repo_dest }}"

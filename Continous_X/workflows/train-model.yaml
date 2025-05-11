@@ -8,6 +8,15 @@ spec:
     parameters:
     - name: endpoint-ip
 
+  volumeClaimTemplates:
+  - metadata:
+      name: workdir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2Gi
+
   templates:
   - name: training-and-build
     steps:
@@ -17,13 +26,22 @@ spec:
             parameters:
             - name: endpoint-ip
               value: "{{workflow.parameters.endpoint-ip}}"
+      - - name: clone-repo
+          template: git-clone
+      - - name: run-pytest
+          template: model-evaluation
+          arguments:
+            parameters:
+              - name: model-version
+                value: "{{steps.trigger-training-endpoint.outputs.result}}"
+          when: "{{steps.trigger-training-endpoint.outputs.result}} != ''"
       - - name: build-container
           template: trigger-build
           arguments:
             parameters:
             - name: model-version
               value: "{{steps.trigger-training-endpoint.outputs.result}}"
-          when: "{{steps.trigger-training-endpoint.outputs.result}} != ''"
+          when: "{{steps.run-pytest.outputs.parameters.test-accuracy}} >= 0.80"
 
   - name: call-endpoint
     inputs:
@@ -66,7 +84,7 @@ spec:
 
         # Trigger model training
         echo "[INFO] Triggering model training..." >&2
-        RESPONSE=$(curl -f -s -X POST http://{{inputs.parameters.endpoint-ip}}:9090/trigger-training)
+        RESPONSE=$(curl -f -s -X POST http://{{inputs.parameters.endpoint-ip}}:5000/trigger-training)
         CURL_EXIT_CODE=$?
 
         echo "[INFO] Training endpoint response was: $RESPONSE" >&2
@@ -86,6 +104,58 @@ spec:
         fi
 
         echo -n "$VERSION"
+  - name: model_evaluation
+    inputs:
+      parameters:
+        - name: model-version
+      artifacts:
+        # <-- this tells Argo to git-clone your repo for this step
+        - name: repo
+          git:
+            repo: https://github.com/adkrish1/Rodent-Infestation-Prediction.git
+            revision: main
+          path: /workspace
+    script:
+      image: python:3.12-slim
+      command: [sh, -c]
+      source: |
+        set -e
+
+        # change into your Flask/tests directory
+        cd /workspace/Model_Evaluation/tests/
+
+        echo "[INFO] Installing dependencies…" >&2
+        pip install --quiet -r ../requirements.txt
+        echo "[INFO] Running pytest…" >&2
+        # assume your tests emit a line like "ACCURACY: 0.87"
+        LOG=$(pytest 2>&1 | tee /dev/stderr)
+
+        ACCURACY=$(echo "$LOG" | grep -oE 'FAILED')
+        echo $ACCURACY
+        if [ "$ACCURACY" = "FAILED" ]; then
+          VALUE=0
+        else
+          VALUE=1
+        fi
+
+        # write a plain number to /tmp/accuracy for Argo to pick up
+        printf "%.2f" "$VALUE" > /tmp/accuracy
+
+    outputs:
+      parameters:
+        - name: test-accuracy
+          valueFrom:
+            path: /tmp/accuracy
+
+
+    outputs:
+      parameters:
+        - name: test-accuracy
+          valueFrom:
+            path: /tmp/accuracy
+    volumeMounts:
+      - name: workdir
+        mountPath: /mnt/workspace/    
 
   - name: trigger-build
     inputs:
