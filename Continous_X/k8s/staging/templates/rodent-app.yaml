@@ -1,0 +1,40 @@
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rodent-app
+  namespace: rodent-staging
+
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: rodent-app
+  template:
+    metadata:
+      labels:
+        app: rodent-app
+    spec:
+      containers:
+        - name: rodent-app
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          ports:
+            - containerPort: 5000
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: rodent-app
+  namespace: rodent-staging
+spec:
+  selector:
+    app: rodent-app
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 5000
+  externalIPs:
+    - {{ .Values.service.externalIP }}
+
