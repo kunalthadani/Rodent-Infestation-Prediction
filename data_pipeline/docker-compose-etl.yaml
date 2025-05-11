@@ -26,29 +26,32 @@ services:
       - python transform_data.py
       - python train_test_val_split.py
 
-  load-data:
-    container_name: etl_load_data
-    image: rclone/rclone:latest
-    volumes:
-      - rodent_infestation_prediction:/data
-      - ~/.config/rclone/rclone.conf:/root/.config/rclone/rclone.conf:ro
-    entrypoint: /bin/sh
-    command:
-      - -c
-      - |
-        if [ -z "$RCLONE_CONTAINER" ]; then
-          echo "ERROR: RCLONE_CONTAINER is not set"
-          exit 1
-        fi
-        echo "Cleaning up existing contents of container..."
-        rclone delete chi_tacc:$RCLONE_CONTAINER --rmdirs || true
+  
+  # This part is not really required as the extract and transform data directly
+  # interacts with the object store directly
+  # load-data:
+  #   container_name: etl_load_data
+  #   image: rclone/rclone:latest
+  #   volumes:
+  #     - rodent_infestation_prediction:/data
+  #     - ~/.config/rclone/rclone.conf:/root/.config/rclone/rclone.conf:ro
+  #   entrypoint: /bin/sh
+  #   command:
+  #     - -c
+  #     - |
+  #       if [ -z "$RCLONE_CONTAINER" ]; then
+  #         echo "ERROR: RCLONE_CONTAINER is not set"
+  #         exit 1
+  #       fi
+  #       echo "Cleaning up existing contents of container..."
+  #       rclone delete chi_tacc:$RCLONE_CONTAINER --rmdirs || true
 
-        rclone copy /data chi_tacc:$RCLONE_CONTAINER \
-        --progress \
-        --transfers=32 \
-        --checkers=16 \
-        --multi-thread-streams=4 \
-        --fast-list
+  #       rclone copy /data chi_tacc:$RCLONE_CONTAINER \
+  #       --progress \
+  #       --transfers=32 \
+  #       --checkers=16 \
+  #       --multi-thread-streams=4 \
+  #       --fast-list
 
-        echo "Listing directories in container after load stage:"
-        rclone lsd chi_tacc:$RCLONE_CONTAINER
+  #       echo "Listing directories in container after load stage:"
+  #       rclone lsd chi_tacc:$RCLONE_CONTAINER
