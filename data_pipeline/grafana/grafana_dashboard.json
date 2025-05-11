@@ -1,0 +1,579 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_FRSER-SQLITE-DATASOURCE",
+      "label": "frser-sqlite-datasource",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "frser-sqlite-datasource",
+      "pluginName": "SQLite"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "datasource",
+      "id": "frser-sqlite-datasource",
+      "name": "SQLite",
+      "version": "3.5.0"
+    },
+    {
+      "type": "panel",
+      "id": "geomap",
+      "name": "Geomap",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "12.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "${DS_FRSER-SQLITE-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "dark-red",
+            "mode": "continuous-GrYlRd"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "displayName": "${complaints}",
+          "fieldMinMax": true,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 22,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "basemap": {
+          "config": {},
+          "name": "Layer 0",
+          "type": "default"
+        },
+        "controls": {
+          "mouseWheelZoom": true,
+          "showAttribution": true,
+          "showDebug": false,
+          "showMeasure": false,
+          "showScale": false,
+          "showZoom": true
+        },
+        "layers": [
+          {
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": {
+                  "field": "counts",
+                  "fixed": "dark-green"
+                },
+                "opacity": 0.4,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "field": "counts",
+                  "fixed": 5,
+                  "max": 10,
+                  "min": 2
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "filterData": {
+              "id": "byRefId",
+              "options": "A"
+            },
+            "location": {
+              "latitude": "latitude",
+              "longitude": "longitude",
+              "mode": "coords"
+            },
+            "name": "counts",
+            "tooltip": true,
+            "type": "markers"
+          }
+        ],
+        "tooltip": {
+          "mode": "details"
+        },
+        "view": {
+          "allLayers": true,
+          "id": "coords",
+          "lat": 40.693162,
+          "lon": -73.985987,
+          "zoom": 11.5
+        }
+      },
+      "pluginVersion": "12.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "${DS_FRSER-SQLITE-DATASOURCE}"
+          },
+          "queryText": "SELECT camis, dba AS name, boro, latitude, longitude, \"month\", score,\n  CASE\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.1mi' THEN \"rat_complaints_0.1mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.2mi' THEN \"rat_complaints_0.2mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.3mi' THEN \"rat_complaints_0.3mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.4mi' THEN \"rat_complaints_0.4mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.5mi' THEN \"rat_complaints_0.5mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.6mi' THEN \"rat_complaints_0.6mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.7mi' THEN \"rat_complaints_0.7mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.8mi' THEN \"rat_complaints_0.8mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.9mi' THEN \"rat_complaints_0.9mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_1.0mi' THEN \"rat_complaints_1.0mi\"\n    WHEN 'rat_complaints_0.7mi' = 'building_count_0.1mi' THEN \"building_count_0.1mi\"\n    WHEN 'rat_complaints_0.7mi' = 'building_count_0.2mi' THEN \"building_count_0.2mi\"\n    WHEN 'rat_complaints_0.7mi' = 'building_count_0.3mi' THEN \"building_count_0.3mi\"\n    WHEN 'rat_complaints_0.7mi' = 'building_count_0.4mi' THEN \"building_count_0.4mi\"\n    WHEN 'rat_complaints_0.7mi' = 'building_count_0.5mi' THEN \"building_count_0.5mi\"\n  END AS counts\nFROM all_radius\nWHERE month = '2025-01'\nAND boro IN ('Bronx','Brooklyn','Manhattan','Queens','Staten Island');\n",
+          "queryType": "table",
+          "rawQueryText": "SELECT camis, dba AS name, boro, latitude, longitude, \"month\", score,\n  CASE\n    WHEN '${complaints}' = 'rat_complaints_0.1mi' THEN \"rat_complaints_0.1mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.2mi' THEN \"rat_complaints_0.2mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.3mi' THEN \"rat_complaints_0.3mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.4mi' THEN \"rat_complaints_0.4mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.5mi' THEN \"rat_complaints_0.5mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.6mi' THEN \"rat_complaints_0.6mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.7mi' THEN \"rat_complaints_0.7mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.8mi' THEN \"rat_complaints_0.8mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.9mi' THEN \"rat_complaints_0.9mi\"\n    WHEN '${complaints}' = 'rat_complaints_1.0mi' THEN \"rat_complaints_1.0mi\"\n    WHEN '${complaints}' = 'building_count_0.1mi' THEN \"building_count_0.1mi\"\n    WHEN '${complaints}' = 'building_count_0.2mi' THEN \"building_count_0.2mi\"\n    WHEN '${complaints}' = 'building_count_0.3mi' THEN \"building_count_0.3mi\"\n    WHEN '${complaints}' = 'building_count_0.4mi' THEN \"building_count_0.4mi\"\n    WHEN '${complaints}' = 'building_count_0.5mi' THEN \"building_count_0.5mi\"\n  END AS counts\nFROM all_radius\nWHERE month = '${month}'\nAND boro IN (${boro:sqlstring});\n",
+          "refId": "A",
+          "timeColumns": [
+            "time",
+            "ts"
+          ]
+        }
+      ],
+      "title": "Heatmap of rat complaints / building counts per month per radius",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "number",
+                "targetField": "latitude"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "longitude"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "counts"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
+      "type": "geomap"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "${DS_FRSER-SQLITE-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 22
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [
+            "range"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.0",
+      "targets": [
+        {
+          "queryText": "SELECT '30075445', dba, month,\nCASE\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.1mi' THEN \"rat_complaints_0.1mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.2mi' THEN \"rat_complaints_0.2mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.3mi' THEN \"rat_complaints_0.3mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.4mi' THEN \"rat_complaints_0.4mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.5mi' THEN \"rat_complaints_0.5mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.6mi' THEN \"rat_complaints_0.6mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.7mi' THEN \"rat_complaints_0.7mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.8mi' THEN \"rat_complaints_0.8mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_0.9mi' THEN \"rat_complaints_0.9mi\"\n    WHEN 'rat_complaints_0.7mi' = 'rat_complaints_1.0mi' THEN \"rat_complaints_1.0mi\"\n    WHEN 'rat_complaints_0.7mi' = 'building_count_0.1mi' THEN \"building_count_0.1mi\"\n    WHEN 'rat_complaints_0.7mi' = 'building_count_0.2mi' THEN \"building_count_0.2mi\"\n    WHEN 'rat_complaints_0.7mi' = 'building_count_0.3mi' THEN \"building_count_0.3mi\"\n    WHEN 'rat_complaints_0.7mi' = 'building_count_0.4mi' THEN \"building_count_0.4mi\"\n    WHEN 'rat_complaints_0.7mi' = 'building_count_0.5mi' THEN \"building_count_0.5mi\"\n  END AS counts\nFROM all_radius\nWHERE camis = '30075445';",
+          "queryType": "table",
+          "rawQueryText": "SELECT '${camis}', dba, month,\nCASE\n    WHEN '${complaints}' = 'rat_complaints_0.1mi' THEN \"rat_complaints_0.1mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.2mi' THEN \"rat_complaints_0.2mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.3mi' THEN \"rat_complaints_0.3mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.4mi' THEN \"rat_complaints_0.4mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.5mi' THEN \"rat_complaints_0.5mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.6mi' THEN \"rat_complaints_0.6mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.7mi' THEN \"rat_complaints_0.7mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.8mi' THEN \"rat_complaints_0.8mi\"\n    WHEN '${complaints}' = 'rat_complaints_0.9mi' THEN \"rat_complaints_0.9mi\"\n    WHEN '${complaints}' = 'rat_complaints_1.0mi' THEN \"rat_complaints_1.0mi\"\n    WHEN '${complaints}' = 'building_count_0.1mi' THEN \"building_count_0.1mi\"\n    WHEN '${complaints}' = 'building_count_0.2mi' THEN \"building_count_0.2mi\"\n    WHEN '${complaints}' = 'building_count_0.3mi' THEN \"building_count_0.3mi\"\n    WHEN '${complaints}' = 'building_count_0.4mi' THEN \"building_count_0.4mi\"\n    WHEN '${complaints}' = 'building_count_0.5mi' THEN \"building_count_0.5mi\"\n  END AS counts\nFROM all_radius\nWHERE camis = '${camis}';",
+          "refId": "A",
+          "timeColumns": [
+            "time",
+            "ts"
+          ],
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "${DS_FRSER-SQLITE-DATASOURCE}"
+          }
+        }
+      ],
+      "title": "Restaurant timeline for ${dba}",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "YYYY-MM",
+                "destinationType": "time",
+                "targetField": "month"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "counts"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "${DS_FRSER-SQLITE-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 22
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.0.0",
+      "targets": [
+        {
+          "queryText": "SELECT COUNT(*) AS total_records FROM all_radius;",
+          "queryType": "table",
+          "rawQueryText": "SELECT COUNT(*) AS total_records FROM all_radius;",
+          "refId": "A",
+          "timeColumns": [
+            "time",
+            "ts"
+          ],
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "${DS_FRSER-SQLITE-DATASOURCE}"
+          }
+        }
+      ],
+      "title": "Total records",
+      "type": "stat"
+    }
+  ],
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allowCustomValue": true,
+        "current": {},
+        "definition": "SELECT DISTINCT month FROM all_radius ORDER BY month;",
+        "description": "Select the yyyy-mm to view the data",
+        "label": "month",
+        "name": "month",
+        "options": [],
+        "query": "SELECT DISTINCT month FROM all_radius ORDER BY month;",
+        "refresh": 1,
+        "regex": "",
+        "sort": 2,
+        "type": "query"
+      },
+      {
+        "allowCustomValue": false,
+        "current": {},
+        "definition": "SELECT DISTINCT boro FROM all_radius ORDER BY boro;",
+        "description": "Select a boro to view the data",
+        "includeAll": true,
+        "label": "boro",
+        "name": "boro",
+        "options": [],
+        "query": "SELECT DISTINCT boro FROM all_radius ORDER BY boro;",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "allowCustomValue": false,
+        "current": {
+          "text": "rat_complaints_0.7mi",
+          "value": "rat_complaints_0.7mi"
+        },
+        "description": "",
+        "label": "Complaints",
+        "name": "complaints",
+        "options": [
+          {
+            "selected": false,
+            "text": "rat_complaints_0.1mi",
+            "value": "rat_complaints_0.1mi"
+          },
+          {
+            "selected": false,
+            "text": "rat_complaints_0.2mi",
+            "value": "rat_complaints_0.2mi"
+          },
+          {
+            "selected": false,
+            "text": "rat_complaints_0.3mi",
+            "value": "rat_complaints_0.3mi"
+          },
+          {
+            "selected": false,
+            "text": "rat_complaints_0.4mi",
+            "value": "rat_complaints_0.4mi"
+          },
+          {
+            "selected": false,
+            "text": "rat_complaints_0.5mi",
+            "value": "rat_complaints_0.5mi"
+          },
+          {
+            "selected": false,
+            "text": "rat_complaints_0.6mi",
+            "value": "rat_complaints_0.6mi"
+          },
+          {
+            "selected": true,
+            "text": "rat_complaints_0.7mi",
+            "value": "rat_complaints_0.7mi"
+          },
+          {
+            "selected": false,
+            "text": "rat_complaints_0.8mi",
+            "value": "rat_complaints_0.8mi"
+          },
+          {
+            "selected": false,
+            "text": "rat_complaints_0.9mi",
+            "value": "rat_complaints_0.9mi"
+          },
+          {
+            "selected": false,
+            "text": "rat_complaints_1.0mi",
+            "value": "rat_complaints_1.0mi"
+          },
+          {
+            "selected": false,
+            "text": "building_count_0.1mi",
+            "value": "building_count_0.1mi"
+          },
+          {
+            "selected": false,
+            "text": "building_count_0.2mi",
+            "value": "building_count_0.2mi"
+          },
+          {
+            "selected": false,
+            "text": "building_count_0.3mi",
+            "value": "building_count_0.3mi"
+          },
+          {
+            "selected": false,
+            "text": "building_count_0.4mi",
+            "value": "building_count_0.4mi"
+          },
+          {
+            "selected": false,
+            "text": "building_count_0.5mi",
+            "value": "building_count_0.5mi"
+          }
+        ],
+        "query": "rat_complaints_0.1mi,rat_complaints_0.2mi,rat_complaints_0.3mi,rat_complaints_0.4mi,rat_complaints_0.5mi,rat_complaints_0.6mi,rat_complaints_0.7mi,rat_complaints_0.8mi,rat_complaints_0.9mi,rat_complaints_1.0mi,building_count_0.1mi,building_count_0.2mi,building_count_0.3mi,building_count_0.4mi,building_count_0.5mi",
+        "type": "custom"
+      },
+      {
+        "current": {
+          "text": "30075445",
+          "value": "30075445"
+        },
+        "label": "Restaurant unique ID",
+        "name": "camis",
+        "options": [
+          {
+            "selected": true,
+            "text": "30075445",
+            "value": "30075445"
+          }
+        ],
+        "query": "30075445",
+        "type": "textbox"
+      },
+      {
+        "allowCustomValue": false,
+        "current": {},
+        "definition": "SELECT dba FROM all_radius WHERE camis = '${camis}'",
+        "label": "Restaurant name",
+        "name": "dba",
+        "options": [],
+        "query": "SELECT dba FROM all_radius WHERE camis = '${camis}'",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "2023-01-01T05:00:00.000Z",
+    "to": "2025-05-01T04:00:00.000Z"
+  },
+  "timepicker": {
+    "hidden": true,
+    "refresh_intervals": []
+  },
+  "timezone": "browser",
+  "title": "NYC Rat Infestation",
+  "uid": "f488f3bb-78d1-488a-9744-ce0916246a0b",
+  "version": 12,
+  "weekStart": ""
+}
