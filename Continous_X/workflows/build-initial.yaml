@@ -11,7 +11,7 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 1Gi
+          storage: 9Gi
 
   templates:
   - name: kaniko-build-flow
