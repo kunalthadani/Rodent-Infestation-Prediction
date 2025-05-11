@@ -2,24 +2,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gourmetgram-app
-  namespace: gourmetgram-staging
+  name: rodent-app
+  namespace: rodent-staging
 
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: gourmetgram-app
+      app: rodent-app
   template:
     metadata:
       labels:
-        app: gourmetgram-app
+        app: rodent-app
     spec:
       containers:
-        - name: gourmetgram-app
+        - name: rodent-app
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           ports:
-            - containerPort: 8000
+            - containerPort: 5000
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 ---
@@ -27,14 +27,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: gourmetgram-app
-  namespace: gourmetgram-staging
+  name: rodent-app
+  namespace: rodent-staging
 spec:
   selector:
-    app: gourmetgram-app
+    app: rodent-app
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 8000
+      targetPort: 5000
   externalIPs:
     - {{ .Values.service.externalIP }}
 

@@ -32,7 +32,7 @@ spec:
 
           while [ $i -le $MAX_RETRIES ]; do
             echo "Attempt $i of $MAX_RETRIES: Cloning repo..."
-            git clone --branch master https://github.com/teaching-on-testbeds/gourmetgram.git /mnt/workspace && break
+            git clone --branch main https://github.com/adkrish1/Rodent-Infestation-Prediction.git /mnt/workspace && break
             echo "Git clone failed. Retrying in 5 seconds..."
             i=$((i + 1))
             sleep 5
@@ -50,11 +50,11 @@ spec:
     container:
       image: gcr.io/kaniko-project/executor:latest
       args:
-        - --dockerfile=/mnt/workspace/Dockerfile
+        - --dockerfile=/mnt/workspace/Model_Serving/Flask/Dockerfile
         - --context=/mnt/workspace
-        - --destination=registry.kube-system.svc.cluster.local:5000/gourmetgram-app:staging-1.0.0
-        - --destination=registry.kube-system.svc.cluster.local:5000/gourmetgram-app:canary-1.0.0
-        - --destination=registry.kube-system.svc.cluster.local:5000/gourmetgram-app:production-1.0.0
+        - --destination=registry.kube-system.svc.cluster.local:5000/rodent-app:staging-1.0.0
+        - --destination=registry.kube-system.svc.cluster.local:5000/rodent-app:canary-1.0.0
+        - --destination=registry.kube-system.svc.cluster.local:5000/rodent-app:production-1.0.0
         - --insecure
       volumeMounts:
         - name: workdir
