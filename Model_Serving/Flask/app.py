@@ -1,3 +1,4 @@
+# app.py
 import pandas as pd
 from flask import Flask, request, jsonify, render_template
 from prometheus_flask_exporter import PrometheusMetrics
@@ -6,26 +7,38 @@ import mlflow.sklearn
 import sklearn
 import logging
 
-mlflow.set_tracking_uri("http://129.114.26.75:8000")  # if needed
+from prometheus_client import Gauge, Counter
 
 app = Flask(__name__)
 metrics = PrometheusMetrics(app)
 
-# — your existing model names —
-MODEL_NAMES = {
-    "Manhattan":       "restaurant-infestation-predictor-Manhattan",
-    "Brooklyn":        "restaurant-infestation-predictor-Brooklyn",
-    "Queens":          "restaurant-infestation-predictor-Queens",
-    "Bronx":           "restaurant-infestation-predictor-Bronx",
-    "Staten Island":   "restaurant-infestation-predictor-SI"
-}
+g_accuracy  = Gauge('model_accuracy',   'Model accuracy',   ['borough'])
+g_f1        = Gauge('model_f1_score',   'Model F1 score',   ['borough'])
+g_recall    = Gauge('model_recall',     'Model recall',     ['borough'])
+g_precision = Gauge('model_precision',  'Model precision',  ['borough'])
 
-# — logging setup (unchanged) —
+predict_calls = Counter(
+    'predict_requests_total',
+    'Total number of /predict calls',
+    ['borough']
+)
+
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
 app.logger.propagate = True
+
+mlflow.set_tracking_uri("http://129.114.26.75:8000")  
+
+MODEL_NAMES = {
+    "Manhattan":     "restaurant-infestation-predictor-Manhattan",
+    "Brooklyn":      "restaurant-infestation-predictor-Brooklyn",
+    "Queens":        "restaurant-infestation-predictor-Queens",
+    "Bronx":         "restaurant-infestation-predictor-Bronx",
+    "Staten Island": "restaurant-infestation-predictor-SI"
+}
 
 def get_highest_model_version(borough: str) -> int:
     client = MlflowClient()
@@ -40,14 +53,10 @@ def get_model(borough: str):
     uri = f"models:/{MODEL_NAMES[borough]}/{version}"
     return mlflow.sklearn.load_model(uri)
 
-# — your original HTML route, unchanged —
 @app.route('/', methods=['GET'])
 def index():
-    # you can still handle GET/POST here if you want,
-    # but POST won't actually run predictions anymore
     return render_template('index.html', boroughs=list(MODEL_NAMES))
 
-# — new JSON API for prediction —
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.get_json()
@@ -55,34 +64,28 @@ def predict():
     if borough not in MODEL_NAMES:
         return jsonify(error="Invalid borough"), 400
 
-    # load the right CSV
     model = get_model(borough)
     fname = f"test_feats_{borough.replace(' ', '_')}.csv"
     df = pd.read_csv(fname)
     y_test = df.y
     X = df.drop(columns=['key', 'y'])
 
-    # run your MLflow model
-
-    proba = model.predict_proba(X)[:, 1]
+    y_proba = model.predict_proba(X)[:, 1]
     y_pred  = model.predict(X)
-    df['proba_1'] = proba
+    df['proba_1'] = y_proba
 
-    # roc_auc = metrics.roc_auc_score(y_test, y_proba)
-
-    # Accuracy
-    accuracy = sklearn.metrics.accuracy_score(y_test, y_pred)
-
-    # F1 Score
-    f1 = sklearn.metrics.f1_score(y_test, y_pred)
-
-    # Recall
-    recall = sklearn.metrics.recall_score(y_test, y_pred)
-
-    # Precision
+    accuracy  = sklearn.metrics.accuracy_score(y_test, y_pred)
+    f1_score  = sklearn.metrics.f1_score(y_test, y_pred)
+    recall    = sklearn.metrics.recall_score(y_test, y_pred)
     precision = sklearn.metrics.precision_score(y_test, y_pred)
 
-    # grab top 10 and return as JSON
+    g_accuracy.labels(borough=borough).set(accuracy)
+    g_f1.labels(borough=borough).set(f1_score)
+    g_recall.labels(borough=borough).set(recall)
+    g_precision.labels(borough=borough).set(precision)
+
+    predict_calls.labels(borough=borough).inc()
+
     top10 = (
         df.nlargest(10, 'proba_1')
           [['key', 'proba_1']]
