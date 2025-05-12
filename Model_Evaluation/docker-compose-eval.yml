@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  pytest:
+    image: python:3.11-slim      
+    container_name: pytest-runner
+    volumes:
+      - ./:/app                  
+      - /mnt/object:/mnt/rodent
+    working_dir: /app
+    environment:
+      - PYTHONUNBUFFERED=1       
+      - PYTHONPATH=/app          
+    command: >
+      sh -c "pip install -r requirements.txt -c model-requirements.txt &&
+             pytest --borough=Brooklyn && pytest --borough=Manhattan && pytest --borough=Bronx && pytest --borough=Queens && pytest --borough=Staten\ Island"
