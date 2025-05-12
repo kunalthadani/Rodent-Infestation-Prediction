@@ -112,7 +112,7 @@ We use Argo Workflows run through ansible playbooks to deploy our trained models
 ## CI/CD and continuous training:
 An Argo Workflow runs a python script to update data weekly. We use ArgoCD workflows to trigger the training pipeline. ArgoCD triggers an external Flask endpoint that runs an ansible playbook to trigger training on a GPU. Once the training completes we run evaluation pytests and then push tag the model to staging. We use the promote-models workflow template to promote models from staging to canary and canary to production. Model version is correctly updated in these workflow templates. 
 
-- Flask: 
+- Flask: https://github.com/adkrish1/Rodent-Infestation-Prediction/tree/main/Continous_X/Retrain-python
 - Workflows: https://github.com/adkrish1/Rodent-Infestation-Prediction/tree/main/Continous_X/workflows
 
 
