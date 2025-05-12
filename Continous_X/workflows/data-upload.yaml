@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: data-upload
+spec:
+  entrypoint: training-and-build
+
+  volumeClaimTemplates:
+  - metadata:
+      name: workdir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2Gi
+
+  templates:
+  - name: training-and-build
+    steps:
+      - - name: run-data-upload
+          template: data-upload-runnner
+
+
+
+  - name: data-upload-runnner
+    inputs:
+      artifacts:
+        # <-- this tells Argo to git-clone your repo for this step
+        - name: repo
+          git:
+            repo: https://github.com/adkrish1/Rodent-Infestation-Prediction.git
+            revision: main
+          path: /workspace
+    script:
+      image: python:3.12-slim
+      command: [sh, -c]
+      source: |
+        set -e
+
+        # change into your Flask/tests directory
+        cd /workspace/data_pipeline/
+
+        echo "[INFO] Installing dependencies…" >&2
+        pip install --quiet -r ../requirements.txt
+        echo "[INFO] Running data upload…" >&2
+        python3 prod_new_data.py
+        

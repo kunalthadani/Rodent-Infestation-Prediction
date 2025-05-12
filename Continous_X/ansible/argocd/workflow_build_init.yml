@@ -1,5 +1,5 @@
 - name: Run Argo Workflow from GitHub Repo
-  hosts: node1
+  hosts: node2
   become: yes
   vars:
     repo_url: https://github.com/adkrish1/Rodent-Infestation-Prediction.git
@@ -16,7 +16,7 @@
         version: main   
 
 - name: Run Argo Workflow from GitHub Repo
-  hosts: node1
+  hosts: node2
   become: yes
   vars:
     repo_url: https://github.com/adkrish1/Rodent-Infestation-Prediction.git

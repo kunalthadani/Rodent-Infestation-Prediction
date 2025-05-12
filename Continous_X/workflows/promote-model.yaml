@@ -68,12 +68,16 @@ spec:
       source: |
         pip install mlflow-skinny > /dev/null
         export MLFLOW_TRACKING_URI=http://mlflow.rodent-platform.svc.cluster.local:8000
+        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='Graph_Bronx', alias='{{inputs.parameters.alias}}', version='{{inputs.parameters.model-version}}')"
+        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='Graph_Brooklyn', alias='{{inputs.parameters.alias}}', version='{{inputs.parameters.model-version}}')"  
+        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='Graph_Manhattan', alias='{{inputs.parameters.alias}}', version='{{inputs.parameters.model-version}}')"  
+        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='Graph_Queens', alias='{{inputs.parameters.alias}}', version='{{inputs.parameters.model-version}}')"
+        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='Graph_Staten Island', alias='{{inputs.parameters.alias}}', version='{{inputs.parameters.model-version}}')"  
         python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='restaurant-infestation-predictor-Bronx', alias='{{inputs.parameters.alias}}', version='{{inputs.parameters.model-version}}')"
         python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='restaurant-infestation-predictor-Brooklyn', alias='{{inputs.parameters.alias}}', version='{{inputs.parameters.model-version}}')"  
         python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='restaurant-infestation-predictor-SI', alias='{{inputs.parameters.alias}}', version='{{inputs.parameters.model-version}}')"  
         python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='restaurant-infestation-predictor-Manhattan', alias='{{inputs.parameters.alias}}', version='{{inputs.parameters.model-version}}')"
-        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='restaurant-infestation-predictor-Queens', alias='{{inputs.parameters.alias}}', version='{{inputs.parameters.model-version}}')"  
-  
+        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='restaurant-infestation-predictor-Queens', alias='{{inputs.parameters.alias}}', version='{{inputs.parameters.model-version}}')" 
   - name: trigger-deploy
     inputs:
       parameters:
