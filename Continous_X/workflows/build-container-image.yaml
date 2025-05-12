@@ -86,7 +86,7 @@ spec:
           echo "1.0.{{inputs.parameters.model-version}}" > /mnt/workspace/Model_Serving/Flask/versions.txt
       volumeMounts:
       - name: workdir
-        mountPath: /mnt/workspace/Model_Serving/Flask/
+        mountPath: /mnt/workspace/
 
   - name: kaniko
     inputs:
@@ -116,11 +116,17 @@ spec:
       source: |
         pip install mlflow-skinny > /dev/null
         export MLFLOW_TRACKING_URI=http://mlflow.rodent-platform.svc.cluster.local:8000
+        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='Graph_Bronx', alias='staging', version='{{inputs.parameters.model-version}}')"
+        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='Graph_Brooklyn', alias='staging', version='{{inputs.parameters.model-version}}')"  
+        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='Graph_Manhattan', alias='staging', version='{{inputs.parameters.model-version}}')"  
+        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='Graph_Queens', alias='staging', version='{{inputs.parameters.model-version}}')"
+        python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='Graph_Staten Island', alias='staging', version='{{inputs.parameters.model-version}}')"  
         python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='restaurant-infestation-predictor-Bronx', alias='staging', version='{{inputs.parameters.model-version}}')"
         python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='restaurant-infestation-predictor-Brooklyn', alias='staging', version='{{inputs.parameters.model-version}}')"  
         python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='restaurant-infestation-predictor-SI', alias='staging', version='{{inputs.parameters.model-version}}')"  
         python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='restaurant-infestation-predictor-Manhattan', alias='staging', version='{{inputs.parameters.model-version}}')"
         python -c "import mlflow; client = mlflow.tracking.MlflowClient(); client.set_registered_model_alias(name='restaurant-infestation-predictor-Queens', alias='staging', version='{{inputs.parameters.model-version}}')"  
+  
   
   
   - name: trigger-deploy

@@ -12,6 +12,7 @@
       - deploy-container-image.yaml
       - promote-model.yaml
       - train-model.yaml
+      - data-upload.yaml
 
   tasks:
     - name: Clone or update rodent repo
