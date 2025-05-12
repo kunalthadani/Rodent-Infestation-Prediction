@@ -19,72 +19,106 @@ from ray.air.integrations.mlflow import MLflowLoggerCallback
 import mlflow
 
 
-USERNAME = os.getenv("MLFLOW_USERNAME")
-PASSWORD = os.getenv("MLFLOW_PASSWORD")
-HOST = os.getenv("MLFLOW_HOST")
-PORT = os.getenv("MLFLOW_PORT")
-
-URI      = f"http://{USERNAME}:{PASSWORD}@{HOST}:{PORT}"
-EXPERIMENT = "restaurant_infestation_predictor_test_Brooklyn"
-
-import os
-os.environ["MLFLOW_TRACKING_URI"] = URI
-os.environ["MLFLOW_EXPERIMENT_NAME"] = EXPERIMENT
-
-
-HEALTH_JSON = "/mnt/rodent/data/43nn-pn8j - NYC Restaurant Inspection Results.json"
-RODENT_CSV  = "/mnt/rodent/data/restaurants_rodent.csv"
-violation_cols = ['02G', '10F', '04L', '08A', '08C',
-       '06C', '06E', '06D', '02H', '06F', '04M', '10B', '10G', '10I', '02B',
-       '04H', '10H', '06A', '04K', '04N', '09B', '10E', '04J', '09C', '09A',
-       '09E', '08B', '04A', '10J', '02C', '06B', '05D', '02I', '10A', '04C',
-       '28-06', '06G', '10D', '03A', '05A', '03B', '10C', '05F', '28-05',
-       '05B', '02A', '03E', '04O', '02F', '04D', '04E', '05H', '04P', '05C',
-       '22G', '02D', '04F', '05E', '04I', '20-04', '03C', '03I', '16-03',
-       '06H', '06I', '09D', '03G', '03F', '28-01', '28-07', '22F', '04B',
-       '18-11', '03D', '20-06', '07A']
+URI      = "http://129.114.26.75:8000"
+EXPERIMENT = "restaurant_infestation_predictor_test_Brooklyn_Ray_tune"
 
 def load_and_prepare():
-    health = pd.read_json(HEALTH_JSON)
-    rodent = pd.read_csv(RODENT_CSV)
-    camis  = health[['camis','boro']].drop_duplicates()
-    df     = rodent.merge(camis, on='camis')
-    df     = df[df.boro == "Brooklyn"].copy()
-    df['inspection_month'] = pd.to_datetime(df['inspection_month'])
-    df.drop(columns=['lat_rad','lon_rad','latitude','longitude','Unnamed: 0','boro'], inplace=True)
-
-    for lag in (1,2,3):
-        df[f'inspection_month_lag{lag}'] = df.groupby('camis')['inspection_month'].shift(lag)
-        df[f'days_since_inspection_lag{lag}'] = (
-            (df['inspection_month'] - df[f'inspection_month_lag{lag}']).dt.days
+    
+    chunks = pd.read_csv('/mnt/rodent/data/all radius with weather no permits.csv', chunksize=500_000)
+    df = pd.concat(chunks)
+    df.drop(columns = ['rat_complaints_0.1mi',
+     'rat_complaints_0.2mi',
+     'rat_complaints_0.3mi',
+     'rat_complaints_0.4mi','rat_complaints_0.6mi',
+     'rat_complaints_0.7mi',
+     'rat_complaints_0.8mi',
+     'rat_complaints_0.9mi',
+     'rat_complaints_1.0mi',], inplace = True)
+    df.drop(columns= ['temperature_2m_min', 'temperature_2m_max', 'precipitation_sum',
+           'precip_day'], inplace = True)
+    df.dropna(subset = 'score', inplace = True)
+    violations = [i for i in df.columns if 'violation_code' in i]
+    df = df.groupby(['camis', 'month', 'rat_complaints_0.5mi', 'dba', 'latitude', 'longitude', 'boro']).sum(violations).reset_index()
+    df = df[df.boro == 'Brooklyn']
+    dba = df[['camis', 'dba']].drop_duplicates()
+    # dba.to_csv(f"/mnt/rodent/inference_data/dba_" + boro + ".csv", index = False)
+    df['month'] = pd.to_datetime(df['month'])
+    health_data_agg = df.drop(columns = ['dba', 'latitude', 'longitude', 'boro'])
+    health_data_agg = health_data_agg[health_data_agg.month > '2000-01']
+    # health_data_agg.to_csv(f"/mnt/rodent/inference_data/inf_feats_" + boro + ".csv", index = False)
+    health_data_agg = health_data_agg.sort_values(['camis','month'])
+    for lag in range(1, 4):
+        health_data_agg[f'inspection_month_lag{lag}'] = (
+            health_data_agg
+              .groupby('camis')['month']
+              .shift(lag)
         )
-        df[f'score_lag{lag}'] = df.groupby('camis')['score'].shift(lag)
-        df[f'rat_complaint_count{lag}'] = df.groupby('camis')['rat_complaint_count'].shift(lag)
-        for vc in violation_cols:
-            df[f'{vc}_lag{lag}'] = df.groupby('camis')[vc].shift(lag)
+    
+    
+        health_data_agg[f'days_since_inspection_lag{lag}'] = (
+            health_data_agg['month']
+            - health_data_agg[f'inspection_month_lag{lag}']
+        ).dt.days
+    
+    
+        health_data_agg[f'score_lag{lag}'] = (
+            health_data_agg.groupby('camis')['score']
+              .shift(lag)
+        )
+    
+        health_data_agg[f'rat_complaint_count{lag}'] = (
+            health_data_agg.groupby('camis')['rat_complaints_0.5mi']
+              .shift(lag)
+        )
+    
+    
+        for vc in violations:
+              health_data_agg[f'{vc}_lag{lag}'] = (
+                  health_data_agg
+                    .groupby('camis')[vc]
+                    .shift(lag)
+              )
+    
+    health_data_agg.drop(columns = ['inspection_month_lag1', 'inspection_month_lag2', 'inspection_month_lag3'], inplace = True)
+    
+    health_data_agg['pred'] = 0
+    health_data_agg.loc[(health_data_agg['violation_code_04L'] > 0) | (health_data_agg['violation_code_04K'] > 0), 'pred'] = 1
+    health_data_agg.drop(columns = violations, inplace = True)
+    
+    health_data_agg.drop(columns = 'score', inplace = True)
+    # print(list(health_data_agg.columns))
+    
+    """***XGBoost***"""
+    
+    keys = health_data_agg['camis']
+    X = health_data_agg.drop(['camis','month',  'pred'], axis=1)
+    y = health_data_agg['pred']
+    months = health_data_agg['month'].sort_values().unique()
+    test_months = months[-2:]
+    is_test  = health_data_agg['month'].isin(test_months)
+    # health_data_agg.to_csv(f"/mnt/rodent/inference_data/test_feats_" + boro + ".csv", index = False)
+    return X, y, is_test, keys
 
-    df['pred'] = 0
-    df.loc[(df['04L']>0)|(df['04K']>0), 'pred'] = 1
-
-    df.drop(
-      columns=violation_cols
-              + [f'inspection_month_lag{l}' for l in (1,2,3)]
-              + ['score'],
-      inplace=True
-    )
-    X = df.drop(['camis','inspection_month','pred'], axis=1)
-    y = df['pred']
-    return X, y
-
-_X, _y = load_and_prepare()
-imbalance_ratio = (_y==0).sum() / (_y==1).sum()
 
 
 def train_xgb(config):
-    X, y = load_and_prepare()
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, stratify=y, random_state=42
-    )
+    mlflow.set_experiment(f"restaurant_infestation_predictor_test_Brooklyn")
+    
+    import xgboost as xgb
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import classification_report, roc_auc_score
+    from sklearn import metrics
+
+    
+    X, y, is_test, keys = load_and_prepare()
+    is_train = ~is_test
+    # _X, _y = load_and_prepare()
+    imbalance_ratio = (y==0).sum() / (y==1).sum()
+    X_train, y_train, keys_train = X.loc[is_train], y.loc[is_train], keys.loc[is_train]
+    X_test,  y_test,  keys_test  = X.loc[is_test],  y.loc[is_test],  keys.loc[is_test]
+
+    df_test_features = X_test.assign(key=keys_test)
+    df_test_features = df_test_features.assign(y = y_test)
     config["scale_pos_weight"] = imbalance_ratio
 
     model = xgb.XGBClassifier(**config)
@@ -122,7 +156,7 @@ reporter  = CLIReporter(
 
 analysis = tune.run(
     train_xgb,
-    resources_per_trial={"cpu": 8, "gpu": 1},
+    resources_per_trial={"cpu": 8},
     config=search_space,
     num_samples=10,
     scheduler=scheduler,
@@ -141,33 +175,31 @@ best_config = analysis.get_best_config(metric="roc_auc", mode="max")
 print("Best config:", best_config)
 
 
-X, y = load_and_prepare()  
-
-from sklearn.model_selection import train_test_split
-X_train, X_val, y_train, y_val = train_test_split(
-    X, y, test_size=0.2, stratify=y, random_state=42
-)
+X, y, is_test, keys = load_and_prepare()  
+is_train = ~is_test
+X_train, y_train, keys_train = X.loc[is_train], y.loc[is_train], keys.loc[is_train]
+X_test,  y_test,  keys_test  = X.loc[is_test],  y.loc[is_test],  keys.loc[is_test]
 
 neg = (y_train==0).sum()
 pos = (y_train==1).sum()
 best_config["scale_pos_weight"] = neg/pos
 
 best_model = xgb.XGBClassifier(**best_config)
-best_model.fit(X_train, y_train, eval_set=[(X_val,y_val)], verbose=False)
+best_model.fit(X_train, y_train, eval_set=[(X_test,y_test)], verbose=False)
 
-mlflow.set_tracking_uri(f"http://{USERNAME}:{PASSWORD}@{HOST}:{PORT}")
-mlflow.set_experiment(EXPERIMENT)
+# mlflow.set_tracking_uri(f"http://{USERNAME}:{PASSWORD}@{HOST}:{PORT}")
+# mlflow.set_experiment(EXPERIMENT)
 
 with mlflow.start_run(run_name="best_xgb_model"):
 
     mlflow.log_params(best_config)
 
-    y_proba = best_model.predict_proba(X_val)[:,1]
-    y_pred  = best_model.predict(X_val)
-    mlflow.log_metric("roc_auc",   roc_auc_score(y_val, y_proba))
-    mlflow.log_metric("accuracy",  accuracy_score(y_val, y_pred))
-    mlflow.log_metric("f1",        f1_score(y_val, y_pred))
-    mlflow.log_metric("recall",    recall_score(y_val, y_pred))
-    mlflow.log_metric("precision", precision_score(y_val, y_pred))
+    y_proba = best_model.predict_proba(X_test)[:,1]
+    y_pred  = best_model.predict(X_test)
+    mlflow.log_metric("roc_auc",   roc_auc_score(y_test, y_proba))
+    mlflow.log_metric("accuracy",  accuracy_score(y_test, y_pred))
+    mlflow.log_metric("f1",        f1_score(y_test, y_pred))
+    mlflow.log_metric("recall",    recall_score(y_test, y_pred))
+    mlflow.log_metric("precision", precision_score(y_test, y_pred))
 
-    mlflow.sklearn.log_model(best_model, "best_model")
+    mlflow.sklearn.log_model(best_model, "best_model_2")
