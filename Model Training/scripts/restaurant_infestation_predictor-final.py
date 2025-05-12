@@ -3,69 +3,65 @@ import mlflow
 import os
 
 
-username = "your-access-key"
-password = "your-secret-key"
-uri = "129.114.26.209:8000/"
-
 mlflow_username = os.getenv("MLFLOW_USERNAME")
 mlflow_password = os.getenv("MLFLOW_PASSWORD")
 mlflow_host = os.getenv("MLFLOW_HOST")
 mlflow_port = os.getenv("MLFLOW_PORT")
+mlflow_uri = "http://129.114.26.75:8000"
 
 
-
-mlflow.set_tracking_uri(
-    f"http://{mlflow_username}:{mlflow_password}@{mlflow_host}:{mlflow_port}"
-)
+mlflow.set_tracking_uri(mlflow_uri)
 
 import pandas as pd
 import numpy as np
 import requests
+from mlflow.tracking import MlflowClient
 
 import warnings
 warnings.filterwarnings("ignore")
 
-health_data =  pd.read_json('/mnt/rodent/data/43nn-pn8j - NYC Restaurant Inspection Results.json')
-
-camis = health_data[['camis', 'boro']].drop_duplicates()
-
-
-boro = 'Brooklyn'
-
-health_data_agg = pd.read_csv("/mnt/rodent/data/restaurants_rodent.csv")
-
-health_data_agg = health_data_agg.merge(camis, on = 'camis')
-health_data_agg = health_data_agg[health_data_agg.boro == boro]
-
-health_data_agg['inspection_month'] = pd.to_datetime(health_data_agg['inspection_month'])
-
-health_data_agg.drop(columns = ['lat_rad', 'lon_rad', 'latitude', 'longitude', 'Unnamed: 0', 'boro'], inplace = True)
+# boro = 'Brooklyn'
+import sys
 
 
-violation_cols = ['02G', '10F', '04L', '08A', '08C',
-       '06C', '06E', '06D', '02H', '06F', '04M', '10B', '10G', '10I', '02B',
-       '04H', '10H', '06A', '04K', '04N', '09B', '10E', '04J', '09C', '09A',
-       '09E', '08B', '04A', '10J', '02C', '06B', '05D', '02I', '10A', '04C',
-       '28-06', '06G', '10D', '03A', '05A', '03B', '10C', '05F', '28-05',
-       '05B', '02A', '03E', '04O', '02F', '04D', '04E', '05H', '04P', '05C',
-       '22G', '02D', '04F', '05E', '04I', '20-04', '03C', '03I', '16-03',
-       '06H', '06I', '09D', '03G', '03F', '28-01', '28-07', '22F', '04B',
-       '18-11', '03D', '20-06', '07A']
+boro = sys.argv[1] if len(sys.argv) > 1 else "Brooklyn"
+print(boro)
 
+chunks = pd.read_csv('/mnt/rodent/data/all radius with weather no permits.csv', chunksize=500_000)
+df = pd.concat(chunks)
+df.drop(columns = ['rat_complaints_0.1mi',
+ 'rat_complaints_0.2mi',
+ 'rat_complaints_0.3mi',
+ 'rat_complaints_0.4mi','rat_complaints_0.6mi',
+ 'rat_complaints_0.7mi',
+ 'rat_complaints_0.8mi',
+ 'rat_complaints_0.9mi',
+ 'rat_complaints_1.0mi',], inplace = True)
+df.drop(columns= ['temperature_2m_min', 'temperature_2m_max', 'precipitation_sum',
+       'precip_day'], inplace = True)
+df.dropna(subset = 'score', inplace = True)
+violations = [i for i in df.columns if 'violation_code' in i]
+df = df.groupby(['camis', 'month', 'rat_complaints_0.5mi', 'dba', 'latitude', 'longitude', 'boro']).sum(violations).reset_index()
+df = df[df.boro == boro]
+dba = df[['camis', 'dba']].drop_duplicates()
+dba.to_csv(f"/mnt/rodent/inference_data/dba_" + boro + ".csv", index = False)
+df['month'] = pd.to_datetime(df['month'])
+health_data_agg = df.drop(columns = ['dba', 'latitude', 'longitude', 'boro'])
+health_data_agg = health_data_agg[health_data_agg.month > '2000-01']
+health_data_agg.to_csv(f"/mnt/rodent/inference_data/inf_feats_" + boro + ".csv", index = False)
+health_data_agg = health_data_agg.sort_values(['camis','month'])
 for lag in range(1, 4):
     health_data_agg[f'inspection_month_lag{lag}'] = (
         health_data_agg
-          .groupby('camis')['inspection_month']
+          .groupby('camis')['month']
           .shift(lag)
     )
 
 
     health_data_agg[f'days_since_inspection_lag{lag}'] = (
-        health_data_agg['inspection_month']
+        health_data_agg['month']
         - health_data_agg[f'inspection_month_lag{lag}']
     ).dt.days
-
-
 
 
     health_data_agg[f'score_lag{lag}'] = (
@@ -74,12 +70,12 @@ for lag in range(1, 4):
     )
 
     health_data_agg[f'rat_complaint_count{lag}'] = (
-        health_data_agg.groupby('camis')['rat_complaint_count']
+        health_data_agg.groupby('camis')['rat_complaints_0.5mi']
           .shift(lag)
     )
 
 
-    for vc in violation_cols:
+    for vc in violations:
           health_data_agg[f'{vc}_lag{lag}'] = (
               health_data_agg
                 .groupby('camis')[vc]
@@ -89,16 +85,15 @@ for lag in range(1, 4):
 health_data_agg.drop(columns = ['inspection_month_lag1', 'inspection_month_lag2', 'inspection_month_lag3'], inplace = True)
 
 health_data_agg['pred'] = 0
-health_data_agg.loc[(health_data_agg['04L'] > 0) | (health_data_agg['04K'] > 0), 'pred'] = 1
-health_data_agg.drop(columns = violation_cols, inplace = True)
+health_data_agg.loc[(health_data_agg['violation_code_04L'] > 0) | (health_data_agg['violation_code_04K'] > 0), 'pred'] = 1
+health_data_agg.drop(columns = violations, inplace = True)
 
 health_data_agg.drop(columns = 'score', inplace = True)
+# print(list(health_data_agg.columns))
 
 """***XGBoost***"""
 
-mlflow.set_tracking_uri(
-    f"http://{username}:{password}@{uri}"
-)
+
 mlflow.set_experiment(f"restaurant_infestation_predictor_test_" + boro)
 
 import xgboost as xgb
@@ -107,20 +102,29 @@ from sklearn.metrics import classification_report, roc_auc_score
 from sklearn import metrics
 
 keys = health_data_agg['camis']
-X = health_data_agg.drop(['camis','inspection_month',  'pred'], axis=1)
+X = health_data_agg.drop(['camis','month',  'pred'], axis=1)
 y = health_data_agg['pred']
+health_data_agg.to_csv(f"/mnt/rodent/inference_data/test_feats_" + boro + ".csv", index = False)
+# X_train, X_test, y_train, y_test, keys_train, keys_test = train_test_split(
+#     X, y, keys,
+#     test_size=0.2,
+#     stratify=y,
+#     random_state=42
+# )
 
-X_train, X_test, y_train, y_test, keys_train, keys_test = train_test_split(
-    X, y, keys,
-    test_size=0.2,
-    stratify=y,
-    random_state=42
-)
+months = health_data_agg['month'].sort_values().unique()
+test_months = months[-2:]
+
+is_test  = health_data_agg['month'].isin(test_months)
+is_train = ~is_test
+
+X_train, y_train, keys_train = X.loc[is_train], y.loc[is_train], keys.loc[is_train]
+X_test,  y_test,  keys_test  = X.loc[is_test],  y.loc[is_test],  keys.loc[is_test]
+
 
 df_test_features = X_test.assign(key=keys_test)
 df_test_features = df_test_features.assign(y = y_test)
 
-df_test_features.to_csv(f"test_feats_" + boro + ".csv", index = False)
 
 objective = 'auc'
 n_estimators=200
@@ -163,16 +167,12 @@ print(classification_report(y_test, y_pred))
 
 roc_auc = metrics.roc_auc_score(y_test, y_proba)
 
-# Accuracy
 accuracy = metrics.accuracy_score(y_test, y_pred)
 
-# F1 Score
 f1 = metrics.f1_score(y_test, y_pred)
 
-# Recall
 recall = metrics.recall_score(y_test, y_pred)
 
-# Precision
 precision = metrics.precision_score(y_test, y_pred)
 
 df_results = X_test.copy()
@@ -214,7 +214,7 @@ slope, intercept = np.polyfit(x, y, 1)
 
 print(f"Slope of the ratio column: {slope}")
 
-with mlflow.start_run():
+with mlflow.start_run() as run:
     mlflow.log_param('eval_metric', 'auc')
     mlflow.log_param('scale_pos_weight', scale_pos_weight)
     mlflow.log_param('n_estimators', n_estimators)
@@ -233,8 +233,13 @@ with mlflow.start_run():
     mlflow.log_metric('precision', precision)
     mlflow.log_metric('Calibration slope', slope)
 
-    mlflow.sklearn.log_model(model, 'model')
+    # mlflow.sklearn.log_model(model, 'model')
+    run_id = run.info.run_id
+    if boro == 'Staten Island':
+        boro = 'SI'
+    mlflow.sklearn.log_model(
+                sk_model=model,
+                artifact_path="updated_model",           
+                registered_model_name=f"restaurant-infestation-predictor-" +boro    
+            )
 
-import joblib
-
-joblib.dump(model, 'xgb_model.joblib')

@@ -1,0 +1,93 @@
+version: "3.8"
+services:
+  jupyter-ray:
+    build: .
+    container_name: jupyter-ray
+    ports:
+      - "8888:8888"    # Jupyter
+      - "8265:8265"    # Ray dashboard
+    volumes:
+      - ~/mltrain-chi/workspace_ray:/home/jovyan/work
+      - /mnt/object:/mnt/rodent     # <-- bind-mount host → container
+    environment:
+      - RAY_ADDRESS=http://0.0.0.0:8265
+    command: >
+      bash -lc "ray job submit \
+          --runtime-env /mnt/rodent/scripts/runtime.json \
+          --working-dir . \
+          --verbose \
+          -- python /mnt/rodent/scripts/gat-ray.py Brooklyn & 
+
+        ray job submit \
+          --runtime-env /mnt/rodent/scripts/runtime.json \
+          --working-dir . \
+          --verbose \
+          -- python /mnt/rodent/scripts/gat-ray.py Queens &
+
+        ray job submit \
+          --runtime-env /mnt/rodent/scripts/runtime.json \
+          --working-dir . \
+          --verbose \
+          -- python /mnt/rodent/scripts/gat-ray.py Manhattan &
+          
+
+        ray job submit \
+          --runtime-env /mnt/rodent/scripts/runtime.json \
+          --working-dir . \
+          --verbose \
+          -- python /mnt/rodent/scripts/gat-ray.py Bronx &
+          
+
+        ray job submit \
+          --runtime-env /mnt/rodent/scripts/runtime.json \
+          --working-dir . \
+          --verbose \
+          -- python /mnt/rodent/scripts/gat-ray.py Staten\ Island &
+           
+        wait
+
+        ray job submit \
+          --runtime-env /mnt/rodent/scripts/runtime.json \
+          --entrypoint-num-gpus 1 \
+          --entrypoint-num-cpus 8 \
+          --verbose \
+          --working-dir . \
+          -- python /mnt/rodent/scripts/restaurant_infestation_predictor-final.py Brooklyn &
+
+
+        ray job submit \
+          --runtime-env /mnt/rodent/scripts/runtime.json \
+          --entrypoint-num-gpus 1 \
+          --entrypoint-num-cpus 8 \
+          --verbose \
+          --working-dir . \
+          -- python /mnt/rodent/scripts/restaurant_infestation_predictor-final.py Queens &
+
+        ray job submit \
+          --runtime-env /mnt/rodent/scripts/runtime.json \
+          --entrypoint-num-gpus 1 \
+          --entrypoint-num-cpus 8 \
+          --verbose \
+          --working-dir . \
+          -- python /mnt/rodent/scripts/restaurant_infestation_predictor-final.py Bronx &
+
+        ray job submit \
+          --runtime-env /mnt/rodent/scripts/runtime.json \
+          --entrypoint-num-gpus 1 \
+          --entrypoint-num-cpus 8 \
+          --verbose \
+          --working-dir . \
+          -- python /mnt/rodent/scripts/restaurant_infestation_predictor-final.py Manhattan &
+
+
+        ray job submit \
+          --runtime-env /mnt/rodent/scripts/runtime.json \
+          --entrypoint-num-gpus 1 \
+          --entrypoint-num-cpus 8 \
+          --verbose \
+          --working-dir . \
+          -- python /mnt/rodent/scripts/restaurant_infestation_predictor-final.py Staten\ Island &
+
+          wait
+
+          "
