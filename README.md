@@ -87,7 +87,7 @@ We can see a calibration curve below which shows that the more restaurants are i
 ## Model serving and offline evaluation
 The steps taken to implement model serving and monitoring platforms are as follows:
 - Model serving:
-    - After the latest version of the models(1 graph and xgboost per borough) has been registered and tagged for production on MLFlow, a Flask app is used to wrap this configuration of models into an inference service as can be seen here:[Flask App]([pytest suite](https://github.com/adkrish1/Rodent-Infestation-Prediction/blob/main/Model_Evaluation/tests/conftest.py)
+    - After the latest version of the models(1 graph and xgboost per borough) has been registered and tagged for production on MLFlow, a Flask app is used to wrap this configuration of models into an inference service as can be seen here:[Flask App](https://github.com/adkrish1/Rodent-Infestation-Prediction/blob/main/Model_Serving/Flask/app.py)
         - The input is a choice from the dropdown list of 5 boroughs in NYC: Manhattan, Brooklyn, Queens, Bronx and Staten Island. A user could also access the predict endpoint directly by making the following call:
         ```
         requests.post("http://129.114.25.90/predict", json={"borough": borough})
