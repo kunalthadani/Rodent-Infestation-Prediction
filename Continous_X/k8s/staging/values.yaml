@@ -11,8 +11,8 @@ service:
 resources:
   limits:
     cpu: "500m"
-    memory: "4096Mi"
+    memory: "6000Mi"
   requests:
     cpu: "200m"
-    memory: "4096Mi"
+    memory: "6000Mi"
 
