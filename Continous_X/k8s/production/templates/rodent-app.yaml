@@ -18,7 +18,7 @@ spec:
         - name: rodent-app
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           ports:
-            - containerPort: 8000
+            - containerPort: 5000
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 ---
@@ -33,7 +33,7 @@ spec:
     app: rodent-app
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 8000
+      targetPort: 5000
   externalIPs:
     - {{ .Values.service.externalIP }}
 
